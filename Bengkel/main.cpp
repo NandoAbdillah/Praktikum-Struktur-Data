@@ -83,39 +83,74 @@ void all_customers()
 
 void customer_data()
 {
-    string id;
-    cout << "\nMasukkan ID Customer: ";
-    cin >> id;
+    data::Customer *c = data::headCustomer;
 
-    data::Customer *c = data::findCustomerById(id);
     if (c == NULL)
     {
         cout << "Customer tidak ditemukan.\n";
         return;
     }
 
-    cout << "Nama          : " << c->nama << endl;
-    cout << "Nomor Telepon : " << c->nomor_telepon << endl;
-    cout << "Umur          : " << c->umur << endl;
-    cout << "Gender        : " << c->gender << endl;
-    cout << "Alamat        : " << c->alamat << endl;
+    while (c != NULL)
+    {
+         cout << "\n\n\n ===== Data Pelanggan ======\n\n";
+        cout << "Nama       : " << c->nama << endl;
+        cout << "Nomor Telepon : " << c->nomor_telepon << endl;
+        cout << "Umur       : " << c->umur << endl;
+        cout << "Gender    : " << c->gender << endl;
+        cout << "Alamat    : " << c->alamat << endl;
 
-    cout << "\n___ Riwayat Service ___\n";
-    data::Service *s = c->head_service;
-    if (s == NULL)
-    {
-        cout << "Belum ada service.\n";
-    }
-    else
-    {
-        while (s != NULL)
+        cout << "\n --- 3 Servis Terakhir --- \n";
+        cout << "-----------------------------\n";
+
+        data::Service *s = c->head_service;
+
+        int serviceCount = 0;
+        while (s != NULL && serviceCount < 3)
         {
-            cout << "- " << s->id_service << " | "
-                 << s->model_mobil << " | "
-                 << s->merek_mobil << " | "
-                 << s->deskripsi_kendala << " | "
-                 << s->nama_montir << endl;
-            s = s->next;
+
+            cout << "Mobil : " << s->model_mobil << endl;
+            cout << "Deskripsi Kendala : " << s->deskripsi_kendala << endl;
+            cout << "Nama Montir : " << s->nama_montir << endl;
+            cout << "-----------------------------\n";
+
+            s = s->next_in_customer;
+            serviceCount++;
+        }
+
+        char navOption;
+        cout << "[N]ext , [P]revious , [E]xit : ";
+        cin >> navOption;
+        if (toupper(navOption) == 'N')
+        {
+            if (c->next != NULL)
+            {
+                c = c->next;
+            }
+            else
+            {
+                cout << "Tidak ada data pelanggan berikutnya.\n";
+            }
+        }
+        else if (toupper(navOption) == 'P')
+        {
+            if (c->prev != NULL)
+            {
+                c = c->prev;
+            }
+            else
+            {
+                cout << "Tidak ada data pelanggan sebelumnya.\n";
+            }
+        }
+        else if (toupper(navOption) == 'E')
+        {
+            break;
+        }
+
+        else
+        {
+            cout << "Pilihan tidak valid!\n";
         }
     }
 }
@@ -126,8 +161,6 @@ void new_service()
     data::Customer *owner = NULL;
 
     cout << "\nInput Service Baru\n";
-
-    helper::generateID('S', data::countServices(), &s.id_service);
 
     cin.ignore();
     cout << "Model Mobil       : ";
@@ -140,23 +173,49 @@ void new_service()
     string namaMontir;
     getline(cin, s.nama_montir);
 
+    int totalServices = data::countServices();
+    helper::generateID('S', totalServices, &s.id_service);
+
     cout << "Nama Customer       : ";
     string namaCustomer;
     getline(cin, namaCustomer);
+
     if (data::findCustomerIdByName(namaCustomer) == "")
     {
-        cout << "Customer tidak ditemukan. Service gagal ditambahkan.\n";
-        return;
+        cout << "Pelanggan tidak ditemukan. Daftar Pelanggan Baru.\n";
+
+        owner = new data::Customer;
+
+        cout << "Nama Pelanggan       : ";
+        getline(cin, owner->nama);
+        cout << "Nomor Telepon       : ";
+        getline(cin, owner->nomor_telepon);
+        cout << "Alamat              : ";
+        getline(cin, owner->alamat);
+        cout << "Umur                : ";
+        cin >> owner->umur;
+        cout << "Gender (L/P)       : ";
+        cin >> owner->gender;
+
+        int totalCustomers = data::countCustomers();
+        helper::generateID('C', totalCustomers, &owner->id_customer);
+        data::insertCustomerBelakang(*owner);
+        data::saveCustomer(*owner);
+
+        s.id_customer = owner->id_customer;
     }
-
-    s.id_customer = data::findCustomerIdByName(namaCustomer);
-
-    owner = data::findCustomerById(s.id_customer);
-
-    if (owner == NULL)
+    else
     {
-        cout << "Customer tidak ditemukan. Service gagal ditambahkan.\n";
-        return;
+
+        s.id_customer = data::findCustomerIdByName(namaCustomer);
+
+        owner = data::findCustomerById(s.id_customer);
+
+        if (owner == NULL)
+        {
+            cout << "Customer tidak ditemukan. Service gagal ditambahkan.\n";
+            return;
+        }
     }
 
     s.data_customer = owner;
@@ -170,14 +229,24 @@ void new_service()
 
 void mechanic_job_history()
 {
-    string namaMontir;
-    cout << "\nMasukkan nama montir: ";
-    cin.ignore();
-    getline(cin, namaMontir);
+    int pilMontir;
+    cout << "\nPilih Montir: \n\n";
+    cout << "1. Suby \n";
+    cout << "2. Farhan \n";
+    cout << "3. Dimas \n";
+    cout << "4. Fajar \n";
 
+    cout << "Masukkan Pilihan: ";
+    cin >> pilMontir;
+
+    string namaMontir = (pilMontir == 1) ? "Suby" : (pilMontir == 2) ? "Farhan"
+                                                : (pilMontir == 3)   ? "Dimas"
+                                                : (pilMontir == 4)   ? "Fajar"
+                                                                     : "";
     data::Customer *c = data::headCustomer;
     bool found = false;
 
+    cout << "\nRiwayat Kerja Montir : " << namaMontir << "\n\n";
     while (c != NULL)
     {
         data::Service *s = c->head_service;
@@ -186,13 +255,16 @@ void mechanic_job_history()
             if (s->nama_montir == namaMontir)
             {
                 found = true;
-                cout << s->id_service << " | "
-                     << s->model_mobil << " | "
-                     << s->merek_mobil << " | "
-                     << s->deskripsi_kendala << " | Customer: "
-                     << c->nama << endl;
+
+                cout << "--------------------\n"
+                     << "Model Mobil: " << s->model_mobil << "\n"
+                     << "Merek Mobil: " << s->merek_mobil << "\n"
+                     << "Deskripsi Kendala: " << s->deskripsi_kendala << "\n"
+                     << "Nama Pelanggan: " << (c ? c->nama : "Unknown") << "\n"
+                     << "Nomor Telepon Pelanggan: " << (c ? c->nomor_telepon : "-") << "\n"
+                     << "--------------------\n";
             }
-            s = s->next;
+            s = s->next_in_customer;
         }
         c = c->next;
     }

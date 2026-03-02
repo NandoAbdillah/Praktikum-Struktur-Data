@@ -73,5 +73,7 @@ namespace helper
         *outID = "";
         *outID += prefix;
         *outID += numberPart;
+
+        cout << "Generated ID: " << *outID << endl;
     }
 }

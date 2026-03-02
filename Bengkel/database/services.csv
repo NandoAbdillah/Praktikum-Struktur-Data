@@ -1,8 +1,12 @@
-S01,C01,Avanza,Toyota,Mesin sulit hidup,Budi
-S02,C01,Xenia,Daihatsu,Ganti oli dan cek rem,Andi
-S03,C02,Brio,Honda,AC tidak dingin,Eko
-S04,C03,Pajero,Mitsubishi,Suara mesin kasar,Rian
-S05,C03,Fortuner,Toyota,Ganti kampas rem,Dimas
-S06,C04,Ayla,Daihatsu,Starter lemah,Fajar
-S07,C05,Mobilio,Honda,Oli bocor,Hendra
-S08,C05,Ertiga,Suzuki,Servis berkala,AndiS07
+id_service,id_pelanggan,model_mobil,merek_mobil,kendala,montir
+S01,C01,Avanza,Toyota,Mesin sulit hidup,Suby
+S02,C01,Xenia,Daihatsu,Ganti oli dan cek rem,Suby
+S03,C02,Brio,Honda,AC tidak dingin,Farhan
+S04,C03,Pajero,Mitsubishi,Suara mesin kasar,Dimas
+S05,C03,Fortuner,Toyota,Ganti kampas rem,Aldo
+S06,C04,Ayla,Daihatsu,Starter lemah,Farhan
+S07,C05,Mobilio,Honda,Oli bocor,Suby
+S08,C05,Ertiga,Suzuki,Servis berkala,Dimas
+S09,C07,ndndnd,gjdknd,gdndkgnd,Dimas
+S10,C05,ddddd,gdgdgd,gddgdg,Aldo
+S11,C06,mbfkgmfkgf,ggfgf,bfgfgf,Farhan

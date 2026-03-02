@@ -7,13 +7,17 @@ using namespace std;
 
 namespace data
 {
-    Customer *headCustomer = NULL;
-    Customer *tailCustomer = NULL;
+    Customer *headCustomer, *tailCustomer;
+
+    Service *headService, *tailService;
 
     void init()
     {
         headCustomer = NULL;
         tailCustomer = NULL;
+
+        headService = NULL;
+        tailService = NULL;
     }
 
     bool isCustomerEmpty()
@@ -27,6 +31,7 @@ namespace data
         *baru = newCustomer;
         baru->head_service = NULL;
         baru->next = NULL;
+        baru->prev = NULL;
 
         if (isCustomerEmpty())
         {
@@ -35,6 +40,7 @@ namespace data
         else
         {
             tailCustomer->next = baru;
+            baru->prev = tailCustomer;
             tailCustomer = baru;
         }
     }
@@ -78,8 +84,23 @@ namespace data
 
         Service *baru = new Service;
         *baru = newService;
+
+        if (headService == NULL)
+        {
+            headService = tailService = baru;
+        }
+        else
+        {
+            tailService->next = baru;
+            baru->prev = tailService;
+            tailService = baru;
+        }
+
         baru->data_customer = customer;
+
         baru->next = NULL;
+        baru->prev = NULL;
+        baru->next_in_customer = NULL;
 
         if (customer->head_service == NULL)
         {
@@ -88,11 +109,11 @@ namespace data
         else
         {
             Service *bantu = customer->head_service;
-            while (bantu->next != NULL)
+            while (bantu->next_in_customer != NULL)
             {
-                bantu = bantu->next;
+                bantu = bantu->next_in_customer;
             }
-            bantu->next = baru;
+            bantu->next_in_customer = baru;
         }
     }
 
@@ -111,33 +132,28 @@ namespace data
     int countServices()
     {
         int count = 0;
-        Customer *c = headCustomer;
-        while (c != NULL)
+        Service *bantu = headService;
+
+        while (bantu != NULL)
         {
-            Service *s = c->head_service;
-            while (s != NULL)
-            {
-                count++;
-                s = s->next;
-            }
-            c = c->next;
+            count++;
+
+            bantu = bantu->next;
         }
+
         return count;
     }
 
     bool loadAllCustomers()
     {
         ifstream file(DB_CUSTOMERS);
+
         if (!file.is_open())
-        {
             return false;
-        }
 
         string line;
 
-        // skip header
         getline(file, line);
-
         while (getline(file, line))
         {
             if (line.empty())
@@ -175,10 +191,7 @@ namespace data
         }
 
         string line;
-
-        // skip header
         getline(file, line);
-
         while (getline(file, line))
         {
             if (line.empty())
@@ -213,12 +226,13 @@ namespace data
             return false;
         }
 
-        file << newCustomer.id_customer << ","
+        file << endl
+             << newCustomer.id_customer << ","
              << newCustomer.nama << ","
              << newCustomer.umur << ","
              << newCustomer.gender << ","
              << newCustomer.nomor_telepon << ","
-             << newCustomer.alamat << endl;
+             << newCustomer.alamat;
 
         file.close();
         return true;
@@ -238,7 +252,7 @@ namespace data
              << newService.model_mobil << ","
              << newService.merek_mobil << ","
              << newService.deskripsi_kendala << ","
-             << newService.nama_montir << endl;
+             << newService.nama_montir;
 
         file.close();
         return true;
@@ -256,23 +270,23 @@ namespace data
 
         while (c != NULL)
         {
-            cout << "ID          : " << c->id_customer << endl;
-            cout << "Nama        : " << c->nama << endl;
-            cout << "Umur        : " << c->umur << endl;
-            cout << "Gender      : " << c->gender << endl;
-            cout << "Telepon     : " << c->nomor_telepon << endl;
-            cout << "Alamat      : " << c->alamat << endl;
+            cout << "Nama              : " << c->nama << endl;
+            cout << "Nomor Telepon     : " << c->nomor_telepon << endl;
+            cout << "Alamat            : " << c->alamat << endl;
+
+            cout << "--- Servis Terakhir ---" << endl;
 
             if (c->head_service != NULL)
             {
                 Service *last = c->head_service;
-                while (last->next != NULL)
+                while (last->next_in_customer != NULL)
                 {
-                    last = last->next;
+                    last = last->next_in_customer;
                 }
 
-                cout << "Servis Terakhir: " << last->model_mobil
-                     << " (" << last->merek_mobil << ")" << endl;
+                cout << "Mobil            : " << last->model_mobil << endl;
+                cout << "Deskripsi Kendala : " << last->deskripsi_kendala << endl;
+                cout << "Nama Montir      : " << last->nama_montir << endl;
             }
             else
             {
@@ -286,37 +300,27 @@ namespace data
 
     void showAllServices()
     {
-        Customer *c = headCustomer;
-        bool ada = false;
-
-        while (c != NULL)
-        {
-            Service *s = c->head_service;
-            while (s != NULL)
-            {
-                ada = true;
-                cout << "ID Service         : " << s->id_service << endl;
-                cout << "ID Customer        : " << s->id_customer << endl;
-                cout << "Model Mobil        : " << s->model_mobil << endl;
-                cout << "Merek Mobil        : " << s->merek_mobil << endl;
-                cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
-                cout << "Nama Montir        : " << s->nama_montir << endl;
-
-                if (s->data_customer != NULL)
-                {
-                    cout << "Nama Customer      : " << s->data_customer->nama << endl;
-                    cout << "No Telepon         : " << s->data_customer->nomor_telepon << endl;
-                }
-
-                cout << "-----------------------------" << endl;
-                s = s->next;
-            }
-            c = c->next;
-        }
-
-        if (!ada)
+        Service *s = headService;
+        if (s == NULL)
         {
             cout << "Data service kosong.\n";
+            return;
+        }
+
+        int serviceCount = 0;
+        while (s != NULL && serviceCount < 3)
+        {
+            cout << "-----------------------------" << endl;
+            cout << "Model Mobil        : " << s->model_mobil << endl;
+            cout << "Merek Mobil        : " << s->merek_mobil << endl;
+            cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
+            cout << "Nama Montir        : " << s->nama_montir << endl;
+            cout << "Nama Pelanggan     : " << (s->data_customer ? s->data_customer->nama : "Unknown") << endl;
+            cout << "No Telepon         : " << (s->data_customer ? s->data_customer->nomor_telepon : "-") << endl;
+            cout << "-----------------------------" << endl;
+
+            serviceCount++;
+            s = s->next;
         }
     }
 }
