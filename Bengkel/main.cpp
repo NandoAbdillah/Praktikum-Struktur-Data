@@ -16,12 +16,13 @@ void customer_data();
 
 void main_menu()
 {
-    cout << "\nWelcome To Lognuts\n";
-    cout << "1. Servis\n";
-    cout << "2. Semua Data Pelanggan\n";
-    cout << "3. Data Pelanggan\n";
-    cout << "4. Keluar\n";
-    cout << "Masukkan Pilihan : ";
+    cout << endl
+         << "Welcome To Lognuts" << endl
+         << "1. Servis" << endl
+         << "2. Semua Data Pelanggan" << endl
+         << "3. Data Pelanggan" << endl
+         << "4. Keluar" << endl
+         << "Masukkan Pilihan : ";
     cin >> choice;
 
     switch (choice)
@@ -45,11 +46,12 @@ void main_menu()
 
 void menu_services()
 {
-    cout << "\nServices\n";
-    cout << "1. Semua Servis Singkat\n";
-    cout << "2. Servis Baru\n";
-    cout << "3. Riwayat Kerja Montir\n";
-    cout << "Masukkan Pilihan : ";
+    cout << endl
+         << "Services" << endl
+         << "1. Semua Servis Singkat" << endl
+         << "2. Servis Baru" << endl
+         << "3. Riwayat Kerja Montir" << endl
+         << "Masukkan Pilihan : ";
     cin >> choice;
 
     switch (choice)
@@ -64,7 +66,7 @@ void menu_services()
         mechanic_job_history();
         break;
     default:
-        cout << "Pilihan tidak valid!\n";
+        cout << "Pilihan tidak valid!" << endl;
         break;
     }
 }
@@ -93,12 +95,12 @@ void customer_data()
 
     while (c != NULL)
     {
-         cout << "\n\n\n ===== Data Pelanggan ======\n\n";
-        cout << "Nama       : " << c->nama << endl;
-        cout << "Nomor Telepon : " << c->nomor_telepon << endl;
-        cout << "Umur       : " << c->umur << endl;
-        cout << "Gender    : " << c->gender << endl;
-        cout << "Alamat    : " << c->alamat << endl;
+        cout << "\n\n\n ===== Data Pelanggan ======\n\n";
+        cout << "Nama       : " << c->nama << endl
+             << "Nomor Telepon : " << c->nomor_telepon << endl
+             << "Umur       : " << c->umur << endl
+             << "Gender    : " << c->gender << endl
+             << "Alamat    : " << c->alamat << endl;
 
         cout << "\n --- 3 Servis Terakhir --- \n";
         cout << "-----------------------------\n";
@@ -109,9 +111,9 @@ void customer_data()
         while (s != NULL && serviceCount < 3)
         {
 
-            cout << "Mobil : " << s->model_mobil << endl;
-            cout << "Deskripsi Kendala : " << s->deskripsi_kendala << endl;
-            cout << "Nama Montir : " << s->nama_montir << endl;
+            cout << "Mobil              : " << s->model_mobil << endl;
+            cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
+            cout << "Nama Montir        : " << s->nama_montir << endl;
             cout << "-----------------------------\n";
 
             s = s->next_in_customer;
