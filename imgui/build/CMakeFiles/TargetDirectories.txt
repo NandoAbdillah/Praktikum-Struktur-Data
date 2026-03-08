@@ -1,0 +1,10 @@
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/CMakeFiles/app.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/CMakeFiles/INSTALL.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/CMakeFiles/ALL_BUILD.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/CMakeFiles/ZERO_CHECK.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/CMakeFiles/uninstall.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/CMakeFiles/INSTALL.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/CMakeFiles/ALL_BUILD.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/src/CMakeFiles/glfw.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/src/CMakeFiles/update_mappings.dir
+C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/src/CMakeFiles/INSTALL.dir

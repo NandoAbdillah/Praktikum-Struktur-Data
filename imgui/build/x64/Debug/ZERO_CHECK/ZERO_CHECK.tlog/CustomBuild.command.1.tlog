@@ -1,0 +1,10 @@
+^C:\UNESA\SEMESTER 2\STRUKTUR DATA\PRAKTIKUM\IMGUI\BUILD\CMAKEFILES\8A0CE3F3366CF09F19BC0CE760F7241C\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/UNESA/Semester 2/Struktur Data/praktikum/imgui" "-BC:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/ImGuiApp.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
