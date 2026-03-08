@@ -13,6 +13,7 @@ void new_service();
 void mechanic_job_history();
 void all_customers();
 void customer_data();
+void finish_service();
 
 void main_menu()
 {
@@ -51,6 +52,7 @@ void menu_services()
          << "1. Semua Servis Singkat" << endl
          << "2. Servis Baru" << endl
          << "3. Riwayat Kerja Montir" << endl
+         << "4. Selesaikan Pekerjaan" << endl
          << "Masukkan Pilihan : ";
     cin >> choice;
 
@@ -64,6 +66,9 @@ void menu_services()
         break;
     case 3:
         mechanic_job_history();
+        break;
+    case 4:
+        finish_service();
         break;
     default:
         cout << "Pilihan tidak valid!" << endl;
@@ -113,7 +118,7 @@ void customer_data()
 
             cout << "Mobil              : " << s->model_mobil << endl;
             cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
-            cout << "Nama Montir        : " << s->nama_montir << endl;
+            cout << "Nama Montir        : " << s->data_montir->nama << endl;
             cout << "-----------------------------\n";
 
             s = s->next_in_customer;
@@ -159,124 +164,95 @@ void customer_data()
 
 void new_service()
 {
-    data::Service s;
-    data::Customer *owner = NULL;
-
     cout << "\nInput Service Baru\n";
-
-    cin.ignore();
-    cout << "Model Mobil       : ";
-    getline(cin, s.model_mobil);
-    cout << "Merek Mobil       : ";
-    getline(cin, s.merek_mobil);
-    cout << "Deskripsi Kendala : ";
-    getline(cin, s.deskripsi_kendala);
-    cout << "Nama Montir       : ";
-    string namaMontir;
-    getline(cin, s.nama_montir);
-
-    int totalServices = data::countServices();
-    helper::generateID('S', totalServices, &s.id_service);
-
-    cout << "Nama Customer       : ";
-    string namaCustomer;
-    getline(cin, namaCustomer);
-
-    if (data::findCustomerIdByName(namaCustomer) == "")
-    {
-        cout << "Pelanggan tidak ditemukan. Daftar Pelanggan Baru.\n";
-
-        owner = new data::Customer;
-
-        cout << "Nama Pelanggan       : ";
-        getline(cin, owner->nama);
-        cout << "Nomor Telepon       : ";
-        getline(cin, owner->nomor_telepon);
-        cout << "Alamat              : ";
-        getline(cin, owner->alamat);
-        cout << "Umur                : ";
-        cin >> owner->umur;
-        cout << "Gender (L/P)       : ";
-        cin >> owner->gender;
-
-        int totalCustomers = data::countCustomers();
-        helper::generateID('C', totalCustomers, &owner->id_customer);
-        data::insertCustomerBelakang(*owner);
-        data::saveCustomer(*owner);
-
-        s.id_customer = owner->id_customer;
-    }
-    else
-    {
-
-        s.id_customer = data::findCustomerIdByName(namaCustomer);
-
-        owner = data::findCustomerById(s.id_customer);
-
-        if (owner == NULL)
-        {
-            cout << "Customer tidak ditemukan. Service gagal ditambahkan.\n";
-            return;
-        }
-    }
-
-    s.data_customer = owner;
-    s.next = NULL;
-
-    data::insertServiceBelakangToCustomer(owner, s);
-    data::saveService(s);
-
-    cout << "Service berhasil ditambahkan.\n";
+    data::tambahServiceBaru();
 }
 
+void finish_service()
+{
+    cout << "\nSelesaikan Pekerjaan\n";
+    data::selesaikanService();
+}
+
+void new_customer()
+{
+    cin.ignore();
+    cout << "\nInput Customer Baru\n";
+    data::tambahCustomerBaru();
+}
 void mechanic_job_history()
 {
-    int pilMontir;
-    cout << "\nPilih Montir: \n\n";
-    cout << "1. Suby \n";
-    cout << "2. Farhan \n";
-    cout << "3. Dimas \n";
-    cout << "4. Fajar \n";
+    cout << "\nRiwayat Kerja Montir\n";
+    data::riwayatKerjaMontir();
+}
 
-    cout << "Masukkan Pilihan: ";
-    cin >> pilMontir;
+void antrian_servis()
+{
+    cout << "\nAntrian Servis\n\n";
+    data::showServiceQueue();
+}
 
-    string namaMontir = (pilMontir == 1) ? "Suby" : (pilMontir == 2) ? "Farhan"
-                                                : (pilMontir == 3)   ? "Dimas"
-                                                : (pilMontir == 4)   ? "Fajar"
-                                                                     : "";
-    data::Customer *c = data::headCustomer;
-    bool found = false;
+void riwayat_service()
+{
+    cout << "\nRiwayat Servis\n\n";
+    cin.ignore();
+    cout << "Masukkan Nama Pelanggan    : ";
+    string namaPelanggan;
+    getline(cin, namaPelanggan);
+    data::showCustomerServiceHistory(namaPelanggan);
+}
 
-    cout << "\nRiwayat Kerja Montir : " << namaMontir << "\n\n";
-    while (c != NULL)
+void main_menu_customer()
+{
+    cout << endl
+         << "Welcome To Lognuts" << endl
+         << "1. Antrian Servis" << endl
+         << "2. Riwayat Servis Anda" << endl
+         << "3. Keluar" << endl
+         << "Masukkan Pilihan : ";
+    cin >> choice;
+
+    switch (choice)
     {
-        data::Service *s = c->head_service;
-        while (s != NULL)
-        {
-            if (s->nama_montir == namaMontir)
-            {
-                found = true;
-
-                cout << "--------------------\n"
-                     << "Model Mobil: " << s->model_mobil << "\n"
-                     << "Merek Mobil: " << s->merek_mobil << "\n"
-                     << "Deskripsi Kendala: " << s->deskripsi_kendala << "\n"
-                     << "Nama Pelanggan: " << (c ? c->nama : "Unknown") << "\n"
-                     << "Nomor Telepon Pelanggan: " << (c ? c->nomor_telepon : "-") << "\n"
-                     << "--------------------\n";
-            }
-            s = s->next_in_customer;
-        }
-        c = c->next;
-    }
-
-    if (!found)
-    {
-        cout << "Tidak ada riwayat untuk montir tersebut.\n";
+    case 1:
+        antrian_servis();
+        break;
+    case 2:
+        riwayat_service();
+        break;
+    case 3:
+        exit(0);
+    default:
+        cout << "Pilihan tidak valid!\n";
+        break;
     }
 }
 
+void main_menu_admin()
+{
+    cout << endl
+         << "Welcome To Lognuts" << endl
+         << "1. Servis" << endl
+         << "2. Pelanggan Baru" << endl
+         << "3. Keluar" << endl
+         << "Masukkan Pilihan : ";
+    cin >> choice;
+
+    switch (choice)
+    {
+    case 1:
+        menu_services();
+        break;
+    case 2:
+        new_customer();
+        break;
+    case 3:
+        exit(0);
+    default:
+        cout << "Pilihan tidak valid!\n";
+        break;
+    }
+}
 int main()
 {
     data::init();
@@ -291,9 +267,21 @@ int main()
         cout << "Gagal membuka services.csv\n";
     }
 
+    if (!data::loadAllMechanics())
+    {
+        cout << "Gagal membuka mechanics.csv\n";
+    }
+
+    if (!data::loadServiceQueue())
+    {
+        cout << "Gagal memuat antrian servis.\n";
+    }
+
     while (true)
     {
-        main_menu();
+        // main_menu();
+        // main_menu_customer();
+        main_menu_admin();
     }
 
     return 0;
