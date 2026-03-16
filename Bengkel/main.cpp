@@ -5,6 +5,7 @@
 using namespace std;
 
 int choice = 0;
+bool isAdmin = false;
 
 void main_menu();
 void menu_services();
@@ -14,6 +15,7 @@ void mechanic_job_history();
 void all_customers();
 void customer_data();
 void finish_service();
+void main_menu_admin();
 
 void main_menu()
 {
@@ -204,28 +206,30 @@ void riwayat_service()
 
 void main_menu_customer()
 {
+    string customerChoice;
     cout << endl
          << "Welcome To Lognuts" << endl
          << "1. Antrian Servis" << endl
          << "2. Riwayat Servis Anda" << endl
          << "3. Keluar" << endl
          << "Masukkan Pilihan : ";
-    cin >> choice;
 
-    switch (choice)
-    {
-    case 1:
+    cin >> customerChoice;
+
+    if (customerChoice == "1")
         antrian_servis();
-        break;
-    case 2:
+
+    else if (customerChoice == "2")
         riwayat_service();
-        break;
-    case 3:
+
+    else if (customerChoice == "3")
         exit(0);
-    default:
+
+    else if (customerChoice == "adminacces8008")
+        isAdmin = true;
+
+    else
         cout << "Pilihan tidak valid!\n";
-        break;
-    }
 }
 
 void main_menu_admin()
@@ -234,7 +238,8 @@ void main_menu_admin()
          << "Welcome To Lognuts" << endl
          << "1. Servis" << endl
          << "2. Pelanggan Baru" << endl
-         << "3. Keluar" << endl
+         << "3. Keluar dari Admin" << endl
+         << "4. Keluar Aplikasi" << endl
          << "Masukkan Pilihan : ";
     cin >> choice;
 
@@ -247,7 +252,11 @@ void main_menu_admin()
         new_customer();
         break;
     case 3:
+        isAdmin = false;
+        break;
+    case 4:
         exit(0);
+        break;
     default:
         cout << "Pilihan tidak valid!\n";
         break;
@@ -279,9 +288,11 @@ int main()
 
     while (true)
     {
-        // main_menu();
-        // main_menu_customer();
-        main_menu_admin();
+        if (!isAdmin)
+            main_menu_customer();
+        else
+            main_menu_admin();
+
     }
 
     return 0;

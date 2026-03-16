@@ -1,15 +1,22 @@
-id_service,id_pelanggan,model_mobil,merek_mobil,kendala,montir
-S01,C01,Avanza,Toyota,Mesin sulit hidup,Suby
-S02,C01,Xenia,Daihatsu,Ganti oli dan cek rem,Suby
-S03,C02,Brio,Honda,AC tidak dingin,Farhan
-S04,C03,Pajero,Mitsubishi,Suara mesin kasar,Dimas
-S05,C03,Fortuner,Toyota,Ganti kampas rem,Aldo
-S06,C04,Ayla,Daihatsu,Starter lemah,Farhan
-S07,C05,Mobilio,Honda,Oli bocor,Suby
-S08,C05,Ertiga,Suzuki,Servis berkala,Dimas
-S09,C07,ndndnd,gjdknd,gdndkgnd,Dimas
-S10,C05,ddddd,gdgdgd,gddgdg,Aldo
-S11,C06,mbfkgmfkgf,ggfgf,bfgfgf,Farhan
-S12,C08,Inova,Kijang,REm Blong,Suby
-S13,C08,innova,toyota,Ganti Oli,Farhan
-S14,C12,ayla,avanza,ban gembozz,Farhan
+id_service,id_montir,id_pelanggan,model_mobil,merek_mobil,kendala,tanggal_masuk,tanggal_selesai,status
+S01,M01,C01,Avanza,Toyota,Mesin sulit hidup,2026-03-01,2026-03-02,1
+S02,M01,C02,Xenia,Daihatsu,Ganti oli dan cek rem,2026-03-02,2026-03-15,0
+S03,M02,C03,Brio,Honda,AC tidak dingin,2026-03-03,2026-03-09,1
+S04,M03,C04,Pajero,Mitsubishi,Suara mesin kasar,2026-03-04,2026-03-15,0
+S05,M02,C03,KIjang,Innova,Lampu tidak menyala,2026-03-01,2026-03-09,1
+S06,M05,C01,jfjfdjf,ajifjid,fdifei,2026-03-09,,0
+S07,M03,C09,inova,kijang,ban bocor,2026-03-09,2026-03-15,0
+S08,M05,C01,Mustang,White Mustang,Aki rusak,2026-03-15,2026-03-16,1
+S09,M04,C12,Rover,Range,dddgdddgdgd,2026-03-15,2026-03-16,1
+S10,M04,C12,Brio,Avanza,matot,2026-03-15,2026-03-16,1
+S11,M04,C12,Ferarri,Ferrari,kegencet,2026-03-16,2026-03-16,1
+S12,M04,C12,coba,coba,semoga ga error,2026-03-16,2026-03-16,1
+S13,M06,C01,Brio,Toyota ,capek banget asli,2026-03-16,-,0
+S14,M06,C01,inilah,itulah,miawww capek,2026-03-16,-,0
+S15,M04,C01,awokawok,hmmm ,ejrejrejerjenrer,2026-03-16,-,0
+S16,M06,C01,banget,capeekk,capek,2026-03-16,-,0
+S17,M04,C15,cppkp,difnidfid,fdfdf,2026-03-16,-,0
+S18,M06,C09,ini,hmmm,servis aku dong,2026-03-16,-,0
+S18,M06,C09,ini,hmmm,servis aku dong,2026-03-16,-,0
+S07,M03,C09,inova,kijang,ban bocor,2026-03-19,2026-03-15,0
+S06,M05,C01,jfjfdjf,ajifjid,fdifei,2026-03-09,-,0

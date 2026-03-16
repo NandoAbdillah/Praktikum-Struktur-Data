@@ -2,6 +2,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
 
 using namespace std;
 
@@ -83,6 +86,23 @@ namespace helper
         if (data->EventChar >= '0' && data->EventChar <= '9')
             return 0;
 
-        return 1; 
+        return 1;
+    }
+
+    string getCurrentDate()
+    {
+        time_t now = time(0);
+        tm *ltm = localtime(&now);
+
+        int year = 1900 + ltm->tm_year;
+        int month = 1 + ltm->tm_mon;
+        int day = ltm->tm_mday;
+
+        stringstream ss;
+        ss << setw(4) << setfill('0') << year << "-"
+           << setw(2) << setfill('0') << month << "-"
+           << setw(2) << setfill('0') << day;
+
+        return ss.str();
     }
 }

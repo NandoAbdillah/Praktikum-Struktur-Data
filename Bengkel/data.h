@@ -4,8 +4,8 @@
 #include <string>
 #define MAX_DATA_CACHE 100
 #define DB_CUSTOMERS "./database/customers.csv"
-#define DB_SERVICES "./database/services.csv"
 #define DB_MECHANICS "./database/mechanics.csv"
+#define DB_SERVICES "./database/services.csv"
 
 using namespace std;
 
@@ -83,7 +83,7 @@ namespace data
 
     bool isCustomerEmpty();
     void insertCustomerBelakang(Customer newCustomer);
-    void insertServiceBelakangToCustomer(Customer *customer, Service *newService);
+    void insertServiceBelakangToCustomer(Customer *customer, Service *newService, Mechanic *montir );
     void tambahServiceBaru();
     void selesaikanService();
     void riwayatKerjaMontir();
@@ -93,13 +93,14 @@ namespace data
     int countCustomers();
     int countServices();
 
-    bool loadAllCustomers();
+    bool loadAllCustomers();    
     bool loadAllMechanics();
     bool loadAllServices();
     bool loadServiceQueue();
 
     bool saveCustomer(Customer newCustomer);
     bool saveService(Service *newService);
+    bool updateService(Service *updatedService);
 
     string findCustomerIdByName(string nama);
 

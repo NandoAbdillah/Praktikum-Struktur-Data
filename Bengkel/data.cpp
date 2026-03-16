@@ -2,6 +2,8 @@
 #include "utils/helper.h"
 #include <iostream>
 #include <fstream>
+#include <cstdio>
+#include <filesystem>
 #define MAX_SERVICES_QUEUE 100
 
 using namespace std;
@@ -13,7 +15,7 @@ namespace data
     Service *headService, *tailService;
 
     Mechanic *headMechanic, *tailMechanic;
-
+    
     int totalServicesInQueue = 0;
     Service *frontServiceQueue, *rearServiceQueue;
 
@@ -123,6 +125,7 @@ namespace data
         }
 
         Service *s = headService;
+
         while (s != NULL)
         {
             if (s->id_montir == baru->id_mechanic)
@@ -134,14 +137,15 @@ namespace data
                     if (baru->front_service_queue == NULL)
                     {
                         baru->rear_service_queue = baru->front_service_queue = s;
-                        s->next_in_queue = NULL;
                     }
                     else
                     {
-                        baru->rear_service_queue->next_in_queue = s;
+
+                        baru->rear_service_queue->next_in_mechanic_queue = s;
                         baru->rear_service_queue = s;
-                        s->next_in_queue = NULL;
                     }
+
+                    s->next_in_mechanic_queue = NULL;
                 }
 
                 if (baru->head_service_history == NULL)
@@ -181,6 +185,22 @@ namespace data
         return NULL;
     }
 
+    Mechanic *findMechanicById(string id_mechanic)
+    {
+        Mechanic *bantu = headMechanic;
+
+        while (bantu != NULL)
+        {
+            if (bantu->id_mechanic == id_mechanic)
+            {
+                return bantu;
+            }
+            bantu = bantu->next;
+        }
+
+        return NULL;
+    }
+
     string findCustomerIdByName(string nama)
     {
         Customer *bantu = headCustomer;
@@ -197,7 +217,7 @@ namespace data
         return "";
     }
 
-    void insertServiceBelakangToCustomer(Customer *customer, Service *newService)
+    void insertServiceBelakangToCustomer(Customer *customer, Service *newService, Mechanic *montir)
     {
         if (customer == NULL || newService == NULL)
             return;
@@ -214,6 +234,7 @@ namespace data
         }
 
         newService->data_customer = customer;
+        newService->data_montir = montir;
 
         newService->next = NULL;
         newService->next_in_customer = NULL;
@@ -239,6 +260,15 @@ namespace data
 
         cout << "Nama Pelanggan       : ";
         getline(cin, c->nama);
+
+        Customer *existingCustomer = findCustomerById(findCustomerIdByName(c->nama));
+        if (existingCustomer != NULL)
+        {
+            cout << "Pelanggan dengan nama ini sudah ada. Silahkan menggunakan nama lain.\n";
+            delete c;
+            return existingCustomer;
+        }
+
         cout << "Nomor Telepon        : ";
         getline(cin, c->nomor_telepon);
         cout << "Alamat               : ";
@@ -251,7 +281,6 @@ namespace data
         int totalCustomers = data::countCustomers();
         helper::generateID('C', totalCustomers, &c->id_customer);
 
-        // PENTING: Kosongkan pointernya agar bersih!
         c->head_service = NULL;
         c->next = NULL;
         c->prev = NULL;
@@ -263,12 +292,16 @@ namespace data
 
         delete c;
 
+        cout << "Pelanggan berhasil ditambahkan dengan" << endl;
+
         return data::findCustomerById(idBaru);
     }
+
     void tambahServiceBaru()
     {
         data::Service *s = new data::Service;
         data::Customer *owner = NULL;
+        data::Mechanic *montir = NULL;
 
         cin.ignore();
         cout << "Model Mobil       : ";
@@ -303,6 +336,8 @@ namespace data
             m = m->next;
         }
 
+        s->id_montir = m->id_mechanic;
+
         int totalServices = data::countServices();
         helper::generateID('S', totalServices, &s->id_service);
 
@@ -320,7 +355,6 @@ namespace data
         }
         else
         {
-
             s->id_customer = data::findCustomerIdByName(namaCustomer);
 
             owner = data::findCustomerById(s->id_customer);
@@ -332,10 +366,13 @@ namespace data
             }
         }
 
+        s->tanggal_masuk_bengkel = helper::getCurrentDate();
+        s->status = Service::DIPROSES;
+
         s->data_customer = owner;
         s->next = NULL;
 
-        data::insertServiceBelakangToCustomer(owner, s);
+        data::insertServiceBelakangToCustomer(owner, s, montir);
         data::saveService(s);
 
         cout << "Service berhasil ditambahkan.\n";
@@ -386,7 +423,7 @@ namespace data
         cout << "Merek Mobil        : " << s->merek_mobil << endl;
         cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
         cout << "Nama Montir        : " << s->data_montir->nama << endl;
-        cout << "Tanggal Masuk       : " << s->tanggal_masuk_bengkel << endl;
+        cout << "Tanggal Masuk      : " << s->tanggal_masuk_bengkel << endl;
         cout << "Nama Pelanggan     : " << (s->data_customer ? s->data_customer->nama : "Unknown") << endl;
         cout << "No Telepon         : " << (s->data_customer ? s->data_customer->nomor_telepon : "-") << endl;
 
@@ -396,8 +433,57 @@ namespace data
         if (toupper(confirm) == 'Y')
         {
             s->status = Service::SELESAI;
-            s->tanggal_selesai = "2024-06-30"; 
-            data::dequeueService();
+            s->tanggal_selesai = helper::getCurrentDate();
+
+            if (m->front_service_queue->next_in_mechanic_queue != NULL)
+            {
+                m->front_service_queue = m->front_service_queue->next_in_mechanic_queue;
+            }
+            else
+            {
+                m->front_service_queue = NULL;
+                m->rear_service_queue = NULL;
+            }
+            s->next_in_mechanic_queue = NULL;
+
+            if (frontServiceQueue == s)
+            {
+
+                frontServiceQueue = s->next_in_queue;
+                if (frontServiceQueue == NULL)
+                {
+                    rearServiceQueue = NULL;
+                }
+            }
+            else
+            {
+
+                Service *bantuGlobal = frontServiceQueue;
+                Service *prevGlobal = NULL;
+
+                while (bantuGlobal != NULL && bantuGlobal != s)
+                {
+                    prevGlobal = bantuGlobal;
+                    bantuGlobal = bantuGlobal->next_in_queue;
+                }
+
+                if (bantuGlobal == s)
+                {
+
+                    prevGlobal->next_in_queue = bantuGlobal->next_in_queue;
+
+                    if (bantuGlobal == rearServiceQueue)
+                    {
+                        rearServiceQueue = prevGlobal;
+                    }
+                }
+            }
+
+            s->next_in_queue = NULL;
+            totalServicesInQueue--;
+
+            updateService(s);
+
             cout << "Service berhasil diselesaikan.\n";
         }
         else
@@ -414,7 +500,6 @@ namespace data
         int index = 1;
         bool adaYangPunyaRiwayat = false;
 
-        // 1. Tampilkan HANYA yang punya riwayat
         while (m != NULL)
         {
             if (m->head_service_history != NULL)
@@ -426,7 +511,6 @@ namespace data
             m = m->next;
         }
 
-        // Cegah program lanjut jika memang tidak ada data sama sekali
         if (!adaYangPunyaRiwayat)
         {
             cout << "Belum ada montir yang memiliki riwayat pekerjaan.\n";
@@ -437,7 +521,6 @@ namespace data
         cout << "\nMasukkan Pilihan: ";
         cin >> pilMontir;
 
-        // 2. Logika Pencarian yang BENAR
         m = headMechanic;
         int currentIndex = 1;
 
@@ -447,14 +530,13 @@ namespace data
             {
                 if (currentIndex == pilMontir)
                 {
-                    break; // KUNCI UTAMA: Hentikan pencarian jika montir yang tepat sudah ketemu!
+                    break;
                 }
                 currentIndex++;
             }
             m = m->next;
         }
 
-        // Jika user memasukkan angka di luar pilihan (misal: 99)
         if (m == NULL)
         {
             cout << "Pilihan tidak valid!\n";
@@ -466,18 +548,20 @@ namespace data
         Service *s = m->head_service_history;
         while (s != NULL)
         {
-            cout << "Model Mobil: " << s->model_mobil << endl;
-            cout << "Merek Mobil: " << s->merek_mobil << endl;
-            cout << "Deskripsi Kendala: " << s->deskripsi_kendala << endl;
-            cout << "Nama Montir: " << s->data_montir->nama << endl;
-            cout << "Nama Pelanggan: " << (s->data_customer ? s->data_customer->nama : "Unknown") << endl;
-            cout << "Nomor Telepon: " << (s->data_customer ? s->data_customer->nomor_telepon : "-") << endl;
-            cout << "Status: " << (s->status == Service::DIPROSES ? "DIPROSES" : "SELESAI") << endl;
+            cout << "Model Mobil        : " << s->model_mobil << endl;
+            cout << "Merek Mobil        : " << s->merek_mobil << endl;
+            cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
+            cout << "Nama Montir        : " << s->data_montir->nama << endl;
+            cout << "Nama Pelanggan     : " << (s->data_customer ? s->data_customer->nama : "Unknown") << endl;
+            cout << "Nomor Telepon      : " << (s->data_customer ? s->data_customer->nomor_telepon : "-") << endl;
+            cout << "Tanggal Masuk      : " << s->tanggal_masuk_bengkel << endl;
+            cout << "Status             : " << (s->status == Service::DIPROSES ? "DIPROSES" : "SELESAI") << endl;
             cout << "-----------------------------" << endl;
 
             s = s->next_in_history;
         }
     }
+    
     bool loadServiceQueue()
     {
         Service *bantu = headService;
@@ -591,9 +675,11 @@ namespace data
             s->next = NULL;
 
             Customer *owner = findCustomerById(s->id_customer);
+            Mechanic *montir = findMechanicById(s->id_montir);
+
             if (owner != NULL)
             {
-                insertServiceBelakangToCustomer(owner, s);
+                insertServiceBelakangToCustomer(owner, s, montir);
             }
         }
 
@@ -665,10 +751,67 @@ namespace data
              << newService->merek_mobil << ","
              << newService->deskripsi_kendala << ","
              << newService->tanggal_masuk_bengkel << ","
-             << newService->tanggal_selesai << ","
+             << (newService->tanggal_selesai.empty() ? "-" : newService->tanggal_selesai) << ","
              << (newService->status == Service::DIPROSES ? "0" : "1");
 
         file.close();
+        return true;
+    }
+
+    bool updateService(Service *service)
+    {
+        ifstream fileIn(DB_SERVICES);
+        if (!fileIn.is_open())
+        {
+            return false;
+        }
+
+        const char *tempFileName = "./database/temp_services.csv";
+        ofstream fileOut(tempFileName);
+        if (!fileOut.is_open())
+        {
+            fileIn.close();
+            return false;
+        }
+
+        string line;
+        // Baca dan tulis header
+        if (getline(fileIn, line))
+        {
+            fileOut << line << "\n";
+        }
+
+        while (getline(fileIn, line))
+        {
+            if (line.empty())
+                continue;
+
+            string id_service = helper::getCSVColumn(line, 0);
+
+            if (id_service == service->id_service)
+            {
+                fileOut << service->id_service << ","
+                        << service->id_montir << ","
+                        << service->id_customer << ","
+                        << service->model_mobil << ","
+                        << service->merek_mobil << ","
+                        << service->deskripsi_kendala << ","
+                        << service->tanggal_masuk_bengkel << ","
+                        << (service->tanggal_selesai.empty() ? "-" : service->tanggal_selesai) << ","
+                        << (service->status == Service::DIPROSES ? "0" : "1") << "\n";
+            }
+            else
+            {
+                fileOut << line << endl;
+            }
+        }
+
+        fileIn.close();
+        fileOut.close();
+
+        remove(DB_SERVICES);
+        rename(tempFileName, DB_SERVICES);
+
         return true;
     }
 
@@ -698,9 +841,9 @@ namespace data
                     last = last->next_in_customer;
                 }
 
-                cout << "Mobil            : " << last->model_mobil << endl;
-                cout << "Deskripsi Kendala : " << last->deskripsi_kendala << endl;
-                cout << "Nama Montir      : " << last->data_montir->nama << endl;
+                cout << "Mobil              : " << last->model_mobil << endl;
+                cout << "Deskripsi Kendala  : " << last->deskripsi_kendala << endl;
+                cout << "Nama Montir        : " << last->data_montir->nama << endl;
             }
             else
             {
@@ -721,8 +864,7 @@ namespace data
             return;
         }
 
-        int serviceCount = 0;
-        while (s != NULL && serviceCount < 3)
+        while (s != NULL)
         {
             cout << "-----------------------------" << endl;
             cout << "Model Mobil        : " << s->model_mobil << endl;
@@ -731,9 +873,9 @@ namespace data
             cout << "Nama Montir        : " << s->data_montir->nama << endl;
             cout << "Nama Pelanggan     : " << (s->data_customer ? s->data_customer->nama : "Unknown") << endl;
             cout << "No Telepon         : " << (s->data_customer ? s->data_customer->nomor_telepon : "-") << endl;
+            cout << "Status             : " << (s->status == Service::DIPROSES ? "DIPROSES" : "SELESAI") << endl;
             cout << "-----------------------------" << endl;
 
-            serviceCount++;
             s = s->next;
         }
     }
@@ -758,8 +900,9 @@ namespace data
             cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
             cout << "Nama Montir        : " << s->data_montir->nama << endl;
             cout << "Nama Pelanggan     : " << (s->data_customer ? s->data_customer->nama : "Unknown") << endl;
+            cout << "Tanggal Masuk      : " << s->tanggal_masuk_bengkel << endl;
             cout << "No Telepon         : " << (s->data_customer ? s->data_customer->nomor_telepon : "-") << endl;
-            cout << "Status             : " << s->DIPROSES << endl;
+            cout << "Status             : " << "DIPROSES" << endl;
             cout << "-----------------------------" << endl;
 
             s = s->next_in_queue;
@@ -776,24 +919,59 @@ namespace data
             if (c->nama == namaPelanggan)
             {
                 found = true;
-                Service *s = c->head_service;
-                while (s != NULL)
-                {
-                    cout << "--------------------" << endl;
-                    cout << "Model Mobil: " << s->model_mobil << endl;
-                    cout << "Merek Mobil: " << s->merek_mobil << endl;
-                    cout << "Deskripsi Kendala: " << s->deskripsi_kendala << endl;
-                    cout << "Nama Montir: " << s->data_montir->nama << endl;
-                    cout << "Tanggal Masuk: " << s->tanggal_masuk_bengkel << endl;
-                    cout << "Nama Pelanggan: " << (c ? c->nama : "Unknown") << endl;
-                    cout << "Nomor Telepon Pelanggan: " << (c ? c->nomor_telepon : "-") << endl;
-                    cout << "--------------------" << endl;
-
-                    s = s->next_in_customer;
-                }
                 break;
             }
             c = c->next;
+        }
+
+        Service *s = c->head_service;
+        if (s == NULL)
+        {
+            cout << "Pelanggan belum pernah melakukan servis.\n";
+        }
+
+        cout << "\n Servis yang sedang diproses:\n\n";
+        Service *queueBantu = frontServiceQueue;
+
+        if (queueBantu == NULL)
+        {
+            cout << "Tidak ada servis yang sedang diproses.\n";
+        }
+
+        while (queueBantu != NULL)
+        {
+            if (queueBantu->data_customer != NULL && queueBantu->data_customer->nama == namaPelanggan)
+            {
+                cout << "-----------------------------" << endl;
+                cout << "Model Mobil        : " << queueBantu->model_mobil << endl;
+                cout << "Merek Mobil        : " << queueBantu->merek_mobil << endl;
+                cout << "Deskripsi Kendala  : " << queueBantu->deskripsi_kendala << endl;
+                cout << "Nama Montir        : " << queueBantu->data_montir->nama << endl;
+                cout << "Tanggal Masuk      : " << queueBantu->tanggal_masuk_bengkel << endl;
+                cout << "No Telepon         : " << (queueBantu->data_customer ? queueBantu->data_customer->nomor_telepon : "-") << endl;
+                cout << "Status             : " << "DIPROSES" << endl;
+                cout << "-----------------------------" << endl;
+            }
+            queueBantu = queueBantu->next_in_queue;
+        }
+
+        cout << "\n Servis yang sudah selesai:\n\n";
+        while (s != NULL)
+        {
+            if (s->status == Service::SELESAI)
+            {
+                cout << "-----------------------------" << endl;
+                cout << "Model Mobil        : " << s->model_mobil << endl;
+                cout << "Merek Mobil        : " << s->merek_mobil << endl;
+                cout << "Deskripsi Kendala  : " << s->deskripsi_kendala << endl;
+                cout << "Nama Montir        : " << s->data_montir->nama << endl;
+                cout << "Tanggal Masuk      : " << s->tanggal_masuk_bengkel << endl;
+                cout << "Nomor Telepon      : " << (s->data_customer ? s->data_customer->nomor_telepon : "-") << endl;
+                cout << "Status             : " << (s->status == Service::DIPROSES ? "DIPROSES" : "SELESAI") << endl;
+                cout << "-----------------------------" << endl;
+            }
+
+            s = s->next_in_customer;
         }
 
         if (!found)
