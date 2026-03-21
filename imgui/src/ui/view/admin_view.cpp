@@ -65,7 +65,7 @@ namespace AdminView
 
         ImGui::SetCursorScreenPos(ImVec2(pCard2.x + 30, pCard2.y + 80));
         ImGui::PushFont(fontRegular);
-        
+
         ImGui::TextColored(ImColor(COLOR_TEXT_MUTED), "Total Kendaraan Diservis");
         ImGui::PopFont();
 
@@ -308,7 +308,7 @@ namespace AdminView
                     service::enqueueService(s);
                     service::save(s);
 
-                    cout << "Service Queue" << owner->name << ": " << service::total_queue << endl;
+                    // cout << "Service Queue" << owner->name << ": " << service::total_queue << endl;
                     string pesanToast = "Servis sudah tercatat, nomor antrian " + owner->name + " adalah: " + to_string(service::total_queue);
 
                     // RESET FORM
