@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_glfw.cpp.obj"
+  "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_glfw.cpp.obj.d"
+  "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_opengl3.cpp.obj"
+  "CMakeFiles/app.dir/external/imgui/backends/imgui_impl_opengl3.cpp.obj.d"
+  "CMakeFiles/app.dir/external/imgui/imgui.cpp.obj"
+  "CMakeFiles/app.dir/external/imgui/imgui.cpp.obj.d"
+  "CMakeFiles/app.dir/external/imgui/imgui_demo.cpp.obj"
+  "CMakeFiles/app.dir/external/imgui/imgui_demo.cpp.obj.d"
+  "CMakeFiles/app.dir/external/imgui/imgui_draw.cpp.obj"
+  "CMakeFiles/app.dir/external/imgui/imgui_draw.cpp.obj.d"
+  "CMakeFiles/app.dir/external/imgui/imgui_tables.cpp.obj"
+  "CMakeFiles/app.dir/external/imgui/imgui_tables.cpp.obj.d"
+  "CMakeFiles/app.dir/external/imgui/imgui_widgets.cpp.obj"
+  "CMakeFiles/app.dir/external/imgui/imgui_widgets.cpp.obj.d"
+  "CMakeFiles/app.dir/src/controller/customer.cpp.obj"
+  "CMakeFiles/app.dir/src/controller/customer.cpp.obj.d"
+  "CMakeFiles/app.dir/src/controller/mechanic.cpp.obj"
+  "CMakeFiles/app.dir/src/controller/mechanic.cpp.obj.d"
+  "CMakeFiles/app.dir/src/controller/service.cpp.obj"
+  "CMakeFiles/app.dir/src/controller/service.cpp.obj.d"
+  "CMakeFiles/app.dir/src/data.cpp.obj"
+  "CMakeFiles/app.dir/src/data.cpp.obj.d"
+  "CMakeFiles/app.dir/src/main.cpp.obj"
+  "CMakeFiles/app.dir/src/main.cpp.obj.d"
+  "CMakeFiles/app.dir/src/ui/style.cpp.obj"
+  "CMakeFiles/app.dir/src/ui/style.cpp.obj.d"
+  "CMakeFiles/app.dir/src/ui/view/admin_view.cpp.obj"
+  "CMakeFiles/app.dir/src/ui/view/admin_view.cpp.obj.d"
+  "CMakeFiles/app.dir/src/ui/view/customer_view.cpp.obj"
+  "CMakeFiles/app.dir/src/ui/view/customer_view.cpp.obj.d"
+  "CMakeFiles/app.dir/src/utils/helper.cpp.obj"
+  "CMakeFiles/app.dir/src/utils/helper.cpp.obj.d"
+  "app.exe"
+  "app.exe.manifest"
+  "app.pdb"
+  "libapp.dll.a"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/app.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

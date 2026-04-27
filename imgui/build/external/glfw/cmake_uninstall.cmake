@@ -1,9 +1,9 @@
 
-if (NOT EXISTS "C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/install_manifest.txt")
-    message(FATAL_ERROR "Cannot find install manifest: \"C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/install_manifest.txt\"")
+if (NOT EXISTS "C:/Users/VICTUS/OneDrive - unesa.ac.id/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/install_manifest.txt")
+    message(FATAL_ERROR "Cannot find install manifest: \"C:/Users/VICTUS/OneDrive - unesa.ac.id/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/install_manifest.txt\"")
 endif()
 
-file(READ "C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/install_manifest.txt" files)
+file(READ "C:/Users/VICTUS/OneDrive - unesa.ac.id/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 
 foreach (file ${files})

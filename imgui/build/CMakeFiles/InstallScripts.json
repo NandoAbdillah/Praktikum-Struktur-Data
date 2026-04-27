@@ -1,9 +1,9 @@
 {
 	"InstallScripts" : 
 	[
-		"C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/cmake_install.cmake",
-		"C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/cmake_install.cmake",
-		"C:/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/src/cmake_install.cmake"
+		"C:/Users/VICTUS/OneDrive - unesa.ac.id/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/cmake_install.cmake",
+		"C:/Users/VICTUS/OneDrive - unesa.ac.id/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/cmake_install.cmake",
+		"C:/Users/VICTUS/OneDrive - unesa.ac.id/UNESA/Semester 2/Struktur Data/praktikum/imgui/build/external/glfw/src/cmake_install.cmake"
 	],
 	"Parallel" : false
 }
