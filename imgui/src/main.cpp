@@ -37,7 +37,9 @@ enum class AppState
     Mechanic_New,
     Services_Booking,
     Services_Cancel,
-    Services_Undo_Cancel
+    Services_Undo_Cancel,
+    Reschedule_Service,
+    Customer_Review
 };
 
 /* int HitungTotalServis()
@@ -64,7 +66,7 @@ bool showAdminPopup = false;
 char adminPassword[64] = "";
 bool loginFailed = false;
 
-//  VARIABEL LOGIN AWAL 
+//  VARIABEL LOGIN AWAL
 bool isLoggedIn = false;
 string loggedInID = "";
 char loginName[128] = "";
@@ -102,7 +104,6 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 130");
 
     AppState currentState = AppState::Dashboard;
-
 
     while (!glfwWindowShouldClose(window))
     {
@@ -263,6 +264,12 @@ int main()
                 }
 
                 ImGui::SetCursorPosX(30);
+                if (DrawSidebarMenuPill(ICON_FA_CALENDAR_DAY, "Reschedule Servis", currentState == AppState::Reschedule_Service))
+                {
+                    currentState = AppState::Reschedule_Service;
+                }
+
+                ImGui::SetCursorPosX(30);
                 if (DrawSidebarMenuPill(ICON_FA_CLIPBOARD_CHECK, "Selesaikan Pekerjaan", currentState == AppState::Finish_Service))
                 {
                     currentState = AppState::Finish_Service;
@@ -357,12 +364,20 @@ int main()
                 {
                     currentState = AppState::Services_Undo_Cancel;
                 }
+                
+                ImGui::SetCursorPosX(30);
+                if (DrawSidebarMenuPill(ICON_FA_STAR_AND_CRESCENT, "Review & Rating", currentState == AppState::Customer_Review))
+                {
+                    currentState = AppState::Customer_Review;
+                }
 
                 ImGui::SetCursorPosX(30);
                 if (DrawSidebarMenuPill(ICON_FA_CAR_REAR, "Riwayat Servis", currentState == AppState::Customer_Services_History))
                 {
                     currentState = AppState::Customer_Services_History;
                 }
+
+
             }
 
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
@@ -387,13 +402,12 @@ int main()
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::EndChild(); 
+            ImGui::EndChild();
             ImGui::PopStyleVar();
             ImGui::PopStyleColor();
 
             ImGui::SameLine(0, 0);
 
-            
             // AREA KONTEN UTAMA
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(ImColor(COLOR_BG_APP)));
             ImGui::BeginChild("ContentArea", ImVec2(0, 0), false);
@@ -401,7 +415,7 @@ int main()
 
             ImDrawList *bg_draw_list = ImGui::GetWindowDrawList();
 
-            // HEADER 
+            // HEADER
             ImGui::SetCursorPos(ImVec2(40, 40));
             ImGui::BeginGroup();
             ImGui::PushFont(fontTitle);
@@ -479,6 +493,17 @@ int main()
                 pageTitle = "Undo Pembatalan Servis";
                 pageSub = "Pulihkan jadwal servis yang batal.";
                 break;
+
+            case AppState::Reschedule_Service:
+                pageTitle = "Reschedule Servis";
+                pageSub = "Atur ulang jadwal servis Anda.";
+                break;
+
+
+            case AppState::Customer_Review:
+                pageTitle = "Review & Rating";
+                pageSub = "Berikan penilaian untuk layanan kami.";
+                break;
             }
 
             ImGui::Text("%s", pageTitle.c_str());
@@ -502,14 +527,14 @@ int main()
                 break;
             }
 
-            // STATE: SERVIS BARU 
+            // STATE: SERVIS BARU
             case AppState::Services_New:
             {
                 AdminView::formNewService();
                 break;
             }
 
-            // STATE: SEMUA SERVIS 
+            // STATE: SEMUA SERVIS
             case AppState::Services_All:
             {
                 AdminView::showAllServices();
@@ -536,7 +561,7 @@ int main()
                 break;
             }
 
-            // STATE: DATA PELANGGAN 
+            // STATE: DATA PELANGGAN
             case AppState::CustomerData:
             {
                 AdminView::showCustomerData();
@@ -571,6 +596,12 @@ int main()
                 break;
             }
 
+             case AppState::Reschedule_Service:
+            {
+                AdminView::rescheduleService();
+                break;
+            }
+
             // STATE: BOOKING SERVIS
             case AppState::Services_Booking:
             {
@@ -591,8 +622,15 @@ int main()
                 CustomerView::undoCancelService();
                 break;
             }
+
+            // STATE: REVIEW & RATING
+            case AppState::Customer_Review:
+            {
+                CustomerView::reviewService();
+                break;
             }
 
+            }
 
             RenderToast();
 

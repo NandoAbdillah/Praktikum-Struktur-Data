@@ -9,6 +9,7 @@ namespace CustomerView
     void bookingService();
     void cancelService();
     void undoCancelService();
+    void reviewService();
 }
 
 #endif // CUSTOMER_VIEW_H

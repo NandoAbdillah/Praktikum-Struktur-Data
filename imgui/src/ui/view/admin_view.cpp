@@ -103,11 +103,15 @@ namespace AdminView
         ImGui::Separator();
         ImGui::Spacing();
 
+        static int in_priority = 0; // mewakili prioritas 1-4
+        static char in_tanggalAmbil[16] = "";
+        static int dp_day = 0, dp_month = 0, dp_year = 2026;
 
         ImGui::BeginGroup();
         ImGui::Text("Merek Mobil");
         ImGui::SetNextItemWidth(250);
-        ImGui::InputText("##merek", in_merekMobil, IM_ARRAYSIZE(in_merekMobil));
+        
+        ImGui::InputTextWithHint("##merek", "Contoh: Honda, Toyota...", in_merekMobil, IM_ARRAYSIZE(in_merekMobil));
         ImGui::EndGroup();
 
         ImGui::SameLine(350);
@@ -115,14 +119,15 @@ namespace AdminView
         ImGui::BeginGroup();
         ImGui::Text("Model Mobil");
         ImGui::SetNextItemWidth(250);
-        ImGui::InputText("##model", in_modelMobil, IM_ARRAYSIZE(in_modelMobil));
+        ImGui::InputTextWithHint("##model", "Contoh: Brio RS, Avanza...", in_modelMobil, IM_ARRAYSIZE(in_modelMobil));
         ImGui::EndGroup();
 
         ImGui::Spacing();
+
+        ImGui::BeginGroup();
         ImGui::Text("Pilih Montir Penanggung Jawab");
         ImGui::SetNextItemWidth(250);
 
-    //   MONTIR
         mechanic::Mechanic *m_loop = mechanic::head;
         const char *list_montir_names[100];
         mechanic::Mechanic *arr_montir_ptrs[100];
@@ -144,15 +149,156 @@ namespace AdminView
         {
             ImGui::TextColored(ImColor(255, 0, 0), "Tidak ada montir terdaftar!");
         }
+        ImGui::EndGroup();
+
+        ImGui::SameLine(350);
+
+        ImGui::BeginGroup();
+        ImGui::Text("Tingkat Prioritas Servis");
+        ImGui::SetNextItemWidth(250);
+        const char *priority_items[] = {"1 - Biasa", "2 - Menengah", "3 - Tinggi", "4 - Sangat Tinggi (VIP)"};
+        ImGui::Combo("##prioritas", &in_priority, priority_items, IM_ARRAYSIZE(priority_items));
+        ImGui::EndGroup();
 
         ImGui::Spacing();
         ImGui::Text("Deskripsi Keluhan / Kendala");
         ImGui::SetNextItemWidth(600);
-        ImGui::InputTextMultiline("##kendala", in_kendala, IM_ARRAYSIZE(in_kendala), ImVec2(0, 80));
+        ImGui::InputTextMultiline("##kendala", in_kendala, IM_ARRAYSIZE(in_kendala), ImVec2(0, 60));
+
+        ImGui::Spacing();
+        ImGui::Text("Rencana Tanggal Ambil (dd-mm-yy)");
+        ImGui::SetNextItemWidth(170);
+        ImGui::InputTextWithHint("##tglambil", "Pilih dari kalender ->", in_tanggalAmbil, IM_ARRAYSIZE(in_tanggalAmbil), ImGuiInputTextFlags_ReadOnly);
+        ImGui::SameLine();
+
+        if (ImGui::Button("Buka Kalender", ImVec2(150, 45)))
+        {
+            ImGui::OpenPopup("Popup Kalender");
+        }
+
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+        if (ImGui::BeginPopupModal("Popup Kalender", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::PushFont(fontMedium);
+            ImGui::TextColored(ImColor(COLOR_PRIMARY), "Pilih Tanggal Pengambilan");
+            ImGui::PopFont();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            int max_days = 31;
+            if (dp_month == 1) 
+            {
+                bool isLeap = (dp_year % 4 == 0 && dp_year % 100 != 0) || (dp_year % 400 == 0);
+                max_days = isLeap ? 29 : 28;
+            }
+            else if (dp_month == 3 || dp_month == 5 || dp_month == 8 || dp_month == 10)
+            {
+                max_days = 30;
+            }
+
+            if (dp_day >= max_days)
+            {
+                dp_day = max_days - 1;
+            }
+
+            
+            ImGui::BeginGroup();
+
+
+            ImGui::SetNextItemWidth(90);
+            std::string day_preview = std::to_string(dp_day + 1);
+            if (ImGui::BeginCombo("Hari", day_preview.c_str()))
+            {
+                for (int n = 0; n < max_days; n++)
+                {
+                    const bool is_selected = (dp_day == n);
+                    if (ImGui::Selectable(std::to_string(n + 1).c_str(), is_selected))
+                    {
+                        dp_day = n;
+                    }
+                    if (is_selected)
+                    {
+                        ImGui::SetItemDefaultFocus(); 
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(100);
+            const char *bulan_items[] = {"Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"};
+            ImGui::Combo("Bulan", &dp_month, bulan_items, IM_ARRAYSIZE(bulan_items));
+
+    
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(70);
+            ImGui::InputInt("Tahun", &dp_year, 0, 0); 
+            if (dp_year < 2024)
+                dp_year = 2024; 
+
+            ImGui::EndGroup();
+
+            ImGui::Spacing();
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+        
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_TEXT_GRN)));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.1f, 0.6f, 0.2f, 1.0f));
+
+    
+            if (ImGui::Button("Simpan Tanggal", ImVec2(170, 45)))
+            {
+                char buffer[16];
+                snprintf(buffer, sizeof(buffer), "%02d-%02d-%02d", dp_day + 1, dp_month + 1, dp_year % 100);
+                std::string requested_date = buffer;
+
+
+                std::string final_date = service::findAvailableDateRecursive(requested_date, 1, "");
+
+                if (final_date == "FULL")
+                {
+                    ShowToast("Error: Jadwal penuh untuk 5 hari ke depan. Pilih tanggal lain!");
+                }
+                else
+                {
+                    strcpy(in_tanggalAmbil, final_date.c_str());
+
+                    if (final_date == requested_date)
+                    {
+                        ShowToast("Tanggal dipilih berhasil disimpan.");
+                    }
+                    else
+                    {
+                        std::string msg = "Tanggal bentrok! Otomatis digeser ke: " + final_date;
+                        ShowToast(msg.c_str());
+                    }
+
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            ImGui::PopStyleColor(2);
+
+            ImGui::SameLine();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_BORDER)));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(COLOR_TEXT_MAIN)));
+            if (ImGui::Button("Batal", ImVec2(90, 45)))
+            {
+                ImGui::CloseCurrentPopup(); 
+            }
+            ImGui::PopStyleColor(2);
+
+            ImGui::EndPopup();
+        }
 
         ImGui::Spacing();
         ImGui::Spacing();
-
 
         ImGui::PushFont(fontMedium);
         ImGui::Text("Data Pelanggan");
@@ -160,13 +306,13 @@ namespace AdminView
         ImGui::Separator();
         ImGui::Spacing();
 
-        // Input Nama Customer
+        
         ImGui::Text("Nama Pelanggan (Pemilik)");
         ImGui::SetNextItemWidth(400);
-        ImGui::InputText("##namacust", in_namaCustomer, IM_ARRAYSIZE(in_namaCustomer));
+        ImGui::InputTextWithHint("##namacust", "Masukkan nama lengkap...", in_namaCustomer, IM_ARRAYSIZE(in_namaCustomer));
         ImGui::SameLine();
 
-        if (ImGui::Button("Cek Pelanggan", ImVec2(150, 42)))
+        if (ImGui::Button("Cek Pelanggan", ImVec2(160, 42)))
         {
             hasCheckedCustomer = true;
             std::string searchName = in_namaCustomer;
@@ -187,7 +333,6 @@ namespace AdminView
         ImGui::Spacing();
         ImGui::Spacing();
 
-
         if (hasCheckedCustomer)
         {
             if (customerFound && foundCustomerPtr)
@@ -206,10 +351,10 @@ namespace AdminView
                 DrawBadge(child_draw_list, pBadge, "Pelanggan Baru - Harap Lengkapi Data", COLOR_BADGE_ORG, COLOR_TEXT_ORG);
                 ImGui::Dummy(ImVec2(0, 30));
 
-                ImGui::BeginGroup(); 
+                ImGui::BeginGroup();
                 ImGui::Text("Nomor Telepon");
                 ImGui::SetNextItemWidth(250);
-                ImGui::InputText("##telp", in_telpCustomer, IM_ARRAYSIZE(in_telpCustomer));
+                ImGui::InputTextWithHint("##telp", "Contoh: 08123456...", in_telpCustomer, IM_ARRAYSIZE(in_telpCustomer));
 
                 ImGui::Spacing();
                 ImGui::Text("Umur");
@@ -228,7 +373,7 @@ namespace AdminView
                 ImGui::Spacing();
                 ImGui::Text("Alamat Lengkap");
                 ImGui::SetNextItemWidth(350);
-                ImGui::InputText("##alamat", in_alamatCustomer, IM_ARRAYSIZE(in_alamatCustomer));
+                ImGui::InputTextWithHint("##alamat", "Contoh: Jl. Diponegoro No 10", in_alamatCustomer, IM_ARRAYSIZE(in_alamatCustomer));
                 ImGui::EndGroup();
 
                 ImGui::Spacing();
@@ -247,89 +392,114 @@ namespace AdminView
                 {
                     ShowToast("Error: Tidak bisa menyimpan, montir kosong!");
                 }
+                else if (strlen(in_tanggalAmbil) == 0)
+                {
+                    ShowToast("Error: Tanggal Pengambilan wajib diisi!");
+                }
                 else
                 {
-                    std::string finalCustName = in_namaCustomer;
-                    customer::Customer *owner = customer::findByName(finalCustName);
+                    //Validasi Tanggal Unik
+                    bool isDateTaken = false;
+                    service::Service *check_date = service::head; 
 
-                    if (owner == NULL)
+                    while (check_date != NULL)
                     {
-                        customer::Customer newCust;
-                        newCust.name = finalCustName;
-                        newCust.phone = in_telpCustomer;
-                        newCust.address = in_alamatCustomer;
-                        newCust.age = in_umurCustomer;
-                        newCust.gender = (in_genderCustomer == 0) ? 'L' : 'P';
-
-
-                        newCust.prev = NULL;
-                        newCust.next = NULL;
-                        newCust.head_service = NULL;
-
-                        int totalCust = customer::count();
-                        helper::generateID('C', totalCust, &newCust.id);
-
-                        customer::insert(newCust);
-                        customer::save(newCust);
-
-                        
-                        owner = customer::findByName(finalCustName);
+                        if (check_date->status == service::PROCESS && check_date->date_out == in_tanggalAmbil)
+                        {
+                            isDateTaken = true;
+                            break;
+                        }
+                        check_date = check_date->next;
                     }
 
-                    
-                    service::Service *s = new service::Service;
+                    if (isDateTaken)
+                    {
+                        ShowToast("Error: Tanggal ini sudah penuh/dibooking. Pilih tanggal lain!");
+                    }
+                    else
+                    {
+                        std::string finalCustName = in_namaCustomer;
+                        customer::Customer *owner = customer::findByName(finalCustName);
 
-                    s->prev = NULL;
-                    s->next = NULL;
-                    s->next_cust = NULL;
-                    s->next_q = NULL;
-                    s->next_hist = NULL;
-                    s->next_mech_q = NULL;
+                        if (owner == NULL)
+                        {
+                            customer::Customer newCust;
+                            newCust.name = finalCustName;
+                            newCust.phone = in_telpCustomer;
+                            newCust.address = in_alamatCustomer;
+                            newCust.age = in_umurCustomer;
+                            newCust.gender = (in_genderCustomer == 0) ? 'L' : 'P';
 
-                    s->id_cust = owner->id;
-                    s->cust_data = owner;
+                            newCust.prev = NULL;
+                            newCust.next = NULL;
+                            newCust.head_service = NULL;
 
-                    s->model = in_modelMobil;
-                    s->brand = in_merekMobil;
-                    s->issue = in_kendala;
+                            int totalCust = customer::count();
+                            helper::generateID('C', totalCust, &newCust.id);
 
-                    mechanic::Mechanic *montir_terpilih = arr_montir_ptrs[idx_montir];
-                    s->id_mech = montir_terpilih->id;
-                    s->mech_data = montir_terpilih;
+                            customer::insert(newCust);
+                            customer::save(newCust);
 
-                    int totalServ = service::count();
-                    helper::generateID('S', totalServ, &s->id);
+                            owner = customer::findByName(finalCustName);
+                        }
 
-                    s->date_in = helper::getCurrentDate();
-                    s->status = service::PROCESS;
+                        service::Service *s = new service::Service;
 
-                    
-                    service::assign(owner, s, montir_terpilih);
-                    service::enqueueService(s);
-                    service::save(s);
+                        s->prev = NULL;
+                        s->next = NULL;
+                        s->next_cust = NULL;
+                        s->next_q = NULL;
+                        s->next_hist = NULL;
+                        s->next_mech_q = NULL;
 
-                    // cout << "Service Queue" << owner->name << ": " << service::total_queue << endl;
-                    string pesanToast = "Servis sudah tercatat, nomor antrian " + owner->name + " adalah: " + to_string(service::total_queue);
+                        s->id_cust = owner->id;
+                        s->cust_data = owner;
 
-                    // RESET FORM
-                    in_namaCustomer[0] = '\0';
-                    in_telpCustomer[0] = '\0';
-                    in_alamatCustomer[0] = '\0';
-                    in_umurCustomer = 20;
-                    in_genderCustomer = 0;
-                    in_merekMobil[0] = '\0';
-                    in_modelMobil[0] = '\0';
-                    in_kendala[0] = '\0';
-                    hasCheckedCustomer = false;
+                        s->model = in_modelMobil;
+                        s->brand = in_merekMobil;
+                        s->issue = in_kendala;
 
-                    ShowToast(pesanToast.c_str());
+                        // Merekam Prioritas dan Tanggal Ambil
+                        s->priority = in_priority + 1; 
+                        s->date_out = in_tanggalAmbil;
+
+                        mechanic::Mechanic *montir_terpilih = arr_montir_ptrs[idx_montir];
+                        s->id_mech = montir_terpilih->id;
+                        s->mech_data = montir_terpilih;
+
+                        int totalServ = service::count();
+                        helper::generateID('S', totalServ, &s->id);
+
+                        s->date_in = helper::getCurrentDate();
+                        s->status = service::PROCESS;
+
+                        service::assign(owner, s, montir_terpilih);
+                        service::enqueueService(s);
+                        service::save(s);
+
+                        string pesanToast = "Servis sudah tercatat, nomor antrian " + owner->name + " adalah: " + to_string(service::total_queue);
+
+                        in_namaCustomer[0] = '\0';
+                        in_telpCustomer[0] = '\0';
+                        in_alamatCustomer[0] = '\0';
+                        in_umurCustomer = 20;
+                        in_genderCustomer = 0;
+                        in_merekMobil[0] = '\0';
+                        in_modelMobil[0] = '\0';
+                        in_kendala[0] = '\0';
+                        in_tanggalAmbil[0] = '\0';
+                        in_priority = 0;
+                        hasCheckedCustomer = false;
+
+                        ShowToast(pesanToast.c_str());
+                    }
                 }
             }
 
             ImGui::PopStyleColor(2);
-        } // End of hasCheckedCustomer
+        } 
 
-        ImGui::PopFont(); // Menutup PushFont(fontRegular) global di awal
+        ImGui::PopFont(); 
         EndCard();
     }
 
@@ -352,12 +522,12 @@ namespace AdminView
         while (count_s != NULL)
         {
             totalServices++;
-            count_s = count_s->next; 
+            count_s = count_s->next;
         }
 
         int totalPages = (totalServices + itemsPerPage - 1) / itemsPerPage;
         if (totalPages == 0)
-            totalPages = 1; 
+            totalPages = 1;
 
         if (currentPage >= totalPages)
             currentPage = totalPages - 1;
@@ -366,7 +536,6 @@ namespace AdminView
 
         ImGuiTableFlags table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_ScrollY;
 
-        
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(8.0f, 6.0f));
 
         if (ImGui::BeginTable("TableServices", 6, table_flags, ImVec2(0, 420)))
@@ -383,10 +552,8 @@ namespace AdminView
             ImGui::TableHeadersRow();
             ImGui::PopFont();
 
-           
             ImGui::PushFont(fontRegular);
 
-           
             service::Service *s = service::head;
             int globalIndex = 0;
             int displayedCount = 0;
@@ -420,7 +587,6 @@ namespace AdminView
                     ImGui::TableSetColumnIndex(5);
                     ImVec2 badgePos = ImGui::GetCursorScreenPos();
 
-                    
                     if (s->status == service::PROCESS)
                     {
                         DrawBadge(ImGui::GetWindowDrawList(), badgePos, "DIPROSES", COLOR_BADGE_ORG, COLOR_TEXT_ORG);
@@ -434,7 +600,7 @@ namespace AdminView
                 }
 
                 globalIndex++;
-                s = s->next; 
+                s = s->next;
             }
 
             if (totalServices == 0)
@@ -444,12 +610,11 @@ namespace AdminView
                 ImGui::TextColored(ImColor(COLOR_TEXT_MUTED), "Data service kosong.");
             }
 
-            ImGui::PopFont(); 
+            ImGui::PopFont();
             ImGui::EndTable();
         }
-        ImGui::PopStyleVar(); 
+        ImGui::PopStyleVar();
 
-       
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
@@ -528,7 +693,6 @@ namespace AdminView
             targetMontir = mechanic::list_mechanics[filter_montir_idx];
         }
 
-   
         customer::Customer *c = customer::head;
         bool found = false;
 
@@ -547,22 +711,17 @@ namespace AdminView
                     // cout << "DEBUG: Menampilkan service ID " << s->id << " untuk montir " << targetMontir->name << endl;
                     found = true;
 
-                   
                     ImVec2 pJob = ImGui::GetCursorScreenPos();
 
-                 
                     ImGui::Dummy(ImVec2(900, 110));
 
-                   
                     ImVec2 nextCardPos = ImGui::GetCursorScreenPos();
 
-                  
                     draw_list->AddRectFilled(pJob, ImVec2(pJob.x + 900, pJob.y + 110), IM_COL32(248, 250, 252, 255), 10.0f);
                     draw_list->AddRect(pJob, ImVec2(pJob.x + 900, pJob.y + 110), COLOR_BORDER, 10.0f);
-                  
+
                     draw_list->AddRectFilled(pJob, ImVec2(pJob.x + 8, pJob.y + 110), COLOR_PRIMARY, 10.0f, ImDrawFlags_RoundCornersLeft);
 
-                   
                     ImGui::SetCursorScreenPos(ImVec2(pJob.x + 30, pJob.y + 15));
                     ImGui::PushFont(fontMedium);
                     ImGui::Text("%s %s", s->brand.c_str(), s->model.c_str());
@@ -577,9 +736,8 @@ namespace AdminView
                     ImGui::SetCursorScreenPos(ImVec2(pJob.x + 780, pJob.y + 15));
                     ImGui::TextColored(ImColor(COLOR_PRIMARY), "%s", s->id.c_str());
 
-                  
                     ImGui::SetCursorScreenPos(nextCardPos);
-                    ImGui::Dummy(ImVec2(0, 5)); 
+                    ImGui::Dummy(ImVec2(0, 5));
                 }
                 s = s->next_cust;
             }
@@ -588,7 +746,7 @@ namespace AdminView
 
         if (!found)
         {
-            ImGui::Dummy(ImVec2(0, 20)); 
+            ImGui::Dummy(ImVec2(0, 20));
             ImGui::TextColored(ImColor(COLOR_TEXT_MUTED), "Montir '%s' belum memiliki riwayat pekerjaan.", targetMontir->name.c_str());
         }
 
@@ -666,7 +824,6 @@ namespace AdminView
     {
         static customer::Customer *current_detail_cust = customer::head;
 
-     
         if (current_detail_cust == nullptr)
             current_detail_cust = customer::head;
 
@@ -680,10 +837,8 @@ namespace AdminView
 
         BeginCard("CardCustomerProfile", ImVec2(900, 600));
 
-      
         ImDrawList *parent_draw_list = ImGui::GetWindowDrawList();
 
-      
         ImVec2 pHeader = ImGui::GetCursorScreenPos();
         parent_draw_list->AddRectFilled(pHeader, ImVec2(pHeader.x + 840, pHeader.y + 120), COLOR_PRIMARY, 16.0f);
 
@@ -740,7 +895,6 @@ namespace AdminView
         service::Service *s = current_detail_cust->head_service;
         int serviceCount = 0;
 
-       
         ImGui::BeginChild("HistoryArea", ImVec2(0, 0), false);
 
         ImDrawList *child_draw_list = ImGui::GetWindowDrawList();
@@ -750,7 +904,7 @@ namespace AdminView
             ImVec2 pHist = ImGui::GetCursorScreenPos();
 
             ImGui::Dummy(ImVec2(800, 80));
-            ImVec2 nextCardPos = ImGui::GetCursorScreenPos(); 
+            ImVec2 nextCardPos = ImGui::GetCursorScreenPos();
 
             child_draw_list->AddRectFilled(pHist, ImVec2(pHist.x + 800, pHist.y + 80), IM_COL32(245, 248, 252, 255), 8.0f);
 
@@ -764,7 +918,6 @@ namespace AdminView
             ImGui::SetCursorScreenPos(ImVec2(pHist.x + 25, pHist.y + 40));
             ImGui::TextColored(ImColor(COLOR_TEXT_MUTED), "Montir: %s  |  Keluhan: %s", s->mech_data->name.c_str(), s->issue.c_str());
 
-            
             ImGui::SetCursorScreenPos(nextCardPos);
             ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
@@ -781,6 +934,8 @@ namespace AdminView
         EndCard();
     }
 
+    /*
+    No Error
     void finishService()
     {
         BeginCard("FinishServiceCard", ImVec2(900, 600));
@@ -854,9 +1009,8 @@ namespace AdminView
             ImGui::Separator();
             ImGui::Spacing();
 
-      
             mechanic::Mechanic *m = active_mechanics[selected_idx];
-            service::Service *s = m->front_queue; // servis terdepan milik montir 
+            service::Service *s = m->front_queue; // servis terdepan milik montir
 
             if (s != NULL)
             {
@@ -893,7 +1047,6 @@ namespace AdminView
                 ImGui::SetCursorScreenPos(ImVec2(pCard.x + 30, pCard.y + 180));
                 ImGui::Text("No Telepon     : %s", custPhone);
 
-                
                 ImGui::SetCursorScreenPos(ImVec2(pCard.x, pCard.y + 240));
 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_TEXT_GRN)));
@@ -903,7 +1056,6 @@ namespace AdminView
                     ImGui::OpenPopup("Konfirmasi Selesai");
                 }
                 ImGui::PopStyleColor(2);
-
 
                 ImVec2 center = ImGui::GetMainViewport()->GetCenter();
                 ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -918,7 +1070,7 @@ namespace AdminView
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_PRIMARY)));
                     if (ImGui::Button("Ya, Selesaikan", ImVec2(150, 40)))
                     {
-                     
+
                         s->status = service::DONE;
                         s->date_out = helper::getCurrentDate();
 
@@ -968,6 +1120,251 @@ namespace AdminView
 
                         service::update(s);
 
+                        ShowToast("Sukses: Service berhasil diselesaikan!");
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::PopStyleColor();
+
+                    ImGui::SameLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_BORDER)));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(COLOR_TEXT_MAIN)));
+                    if (ImGui::Button("Batal (N)", ImVec2(120, 40)))
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::PopStyleColor(2);
+
+                    ImGui::EndPopup();
+                }
+            }
+        }
+
+        EndCard();
+    }
+*/
+
+ // Error
+   void finishService()
+    {
+        BeginCard("FinishServiceCard", ImVec2(900, 600));
+
+        ImGui::PushFont(fontTitle);
+        ImGui::Text("Selesaikan Servis Kendaraan");
+        ImGui::PopFont();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        std::cout << "[DEBUG 1] Masuk menu finishService" << std::endl;
+
+        // LIST MONTIR YANG AKTIF
+        mechanic::Mechanic *active_mechanics[100];
+        int active_count = 0;
+
+        std::cout << "[DEBUG 2] Mulai loop mechanic::head" << std::endl;
+        mechanic::Mechanic *m_loop = mechanic::head;
+        while (m_loop != NULL)
+        {
+            if (m_loop->front_queue != NULL)
+            {
+                active_mechanics[active_count] = m_loop;
+                active_count++;
+            }
+            m_loop = m_loop->next;
+        }
+        std::cout << "[DEBUG 3] Selesai loop mechanic::head. Jumlah aktif: " << active_count << std::endl;
+
+        static int selected_idx = 0;
+        if (selected_idx >= active_count)
+            selected_idx = 0;
+
+        ImGui::PushFont(fontMedium);
+        ImGui::Text("Pilih Montir yang akan menyelesaikan service:");
+        ImGui::PopFont();
+
+        ImGui::SetNextItemWidth(300);
+        if (active_count == 0)
+        {
+            std::cout << "[DEBUG 4A] Masuk ke kondisi active_count == 0" << std::endl;
+            ImGui::BeginDisabled();
+            if (ImGui::BeginCombo("##montirSelect", "Tidak ada servis diproses..."))
+            {
+                ImGui::EndCombo();
+            }
+            ImGui::EndDisabled();
+
+            ImGui::Spacing();
+            ImGui::TextColored(ImColor(COLOR_TEXT_MUTED), "Semua montir sedang nganggur. Tidak ada antrian yang berjalan.");
+        }
+        else
+        {
+            std::cout << "[DEBUG 4B] Masuk ke kondisi active_count > 0. Index terpilih: " << selected_idx << std::endl;
+            const char *preview_value = active_mechanics[selected_idx]->name.c_str();
+            if (ImGui::BeginCombo("##montirSelect", preview_value))
+            {
+                for (int i = 0; i < active_count; i++)
+                {
+                    const bool is_selected = (selected_idx == i);
+                    if (ImGui::Selectable(active_mechanics[i]->name.c_str(), is_selected))
+                    {
+                        selected_idx = i;
+                    }
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            std::cout << "[DEBUG 5] Mengambil pointer montir dari array" << std::endl;
+            mechanic::Mechanic *m = active_mechanics[selected_idx];
+
+
+            // PENCARI PRIORITAS TERTINGGI 
+            service::Service *s = NULL; 
+
+            if (m != NULL && m->front_queue != NULL)
+            {
+                service::Service *s_loop = m->front_queue;
+                s = s_loop; 
+                
+                int safety_counter = 0;
+
+            
+                while (s_loop != NULL && safety_counter < 100)
+                {
+                    if (s != NULL)
+                    {
+                        if (s_loop->priority > s->priority)
+                        {
+                            s = s_loop; 
+                        }
+                        else if (s_loop->priority == s->priority)
+                        {
+                            if (service::dateToInt(s_loop->date_out) < service::dateToInt(s->date_out))
+                            {
+                                s = s_loop; 
+                            }
+                        }
+                    }
+                    s_loop = s_loop->next_mech_q; 
+                    safety_counter++;            
+                }
+                
+                
+                if (safety_counter >= 100) {
+                    std::cout << "[WARNING] Terdeteksi Infinite Loop pada antrean Montir " << m->name << ". Data Linked List melingkar!" << std::endl;
+                }
+            }
+
+            std::cout << "[DEBUG 11] Selesai cari prioritas. Servis target: " << (s ? s->id : "NULL") << std::endl;
+
+            if (s != NULL)
+            {
+               
+                ImVec2 pCard = ImGui::GetCursorScreenPos();
+                ImDrawList *draw_list = ImGui::GetWindowDrawList();
+
+                draw_list->AddRectFilled(pCard, ImVec2(pCard.x + 840, pCard.y + 240), IM_COL32(245, 248, 252, 255), 12.0f);
+                draw_list->AddRect(pCard, ImVec2(pCard.x + 840, pCard.y + 240), COLOR_BORDER, 12.0f);
+                draw_list->AddRectFilled(pCard, ImVec2(pCard.x + 8, pCard.y + 240), COLOR_BADGE_ORG, 12.0f, ImDrawFlags_RoundCornersLeft);
+
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 30, pCard.y + 20));
+                ImGui::PushFont(fontMedium);
+                ImGui::Text("Detail Servis (Prioritas Tertinggi)");
+                ImGui::PopFont();
+
+               
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 30, pCard.y + 55));
+                ImGui::Text("Kendaraan      : %s %s", s->brand.c_str(), s->model.c_str());
+
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 30, pCard.y + 80));
+                ImGui::Text("Keluhan        : %s", s->issue.c_str());
+
+
+                const char *mechName = (s->mech_data != NULL) ? s->mech_data->name.c_str() : "Data Montir Hilang!";
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 30, pCard.y + 105));
+                ImGui::Text("Nama Montir    : %s", mechName);
+
+                
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 400, pCard.y + 55));
+                ImGui::TextColored(ImColor(200, 80, 0, 255), "Kepentingan    : %d", s->priority);
+
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 400, pCard.y + 80));
+                ImGui::TextColored(ImColor(200, 80, 0, 255), "Tgl Ambil      : %s", s->date_out.c_str());
+
+               
+                const char *custName = s->cust_data ? s->cust_data->name.c_str() : "Unknown";
+                const char *custPhone = s->cust_data ? s->cust_data->phone.c_str() : "-";
+
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 30, pCard.y + 140));
+                ImGui::Text("Pelanggan      : %s", custName);
+
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x + 30, pCard.y + 165));
+                ImGui::Text("No Telepon     : %s", custPhone);
+
+                ImGui::SetCursorScreenPos(ImVec2(pCard.x, pCard.y + 260));
+
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_TEXT_GRN)));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.1f, 0.7f, 0.2f, 1.0f));
+                if (ImGui::Button("Selesaikan Servis Ini", ImVec2(250, 45)))
+                {
+                    ImGui::OpenPopup("Konfirmasi Selesai");
+                }
+                ImGui::PopStyleColor(2);
+
+              
+                ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+                if (ImGui::BeginPopupModal("Konfirmasi Selesai", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+                {
+                    ImGui::Text("Apakah Anda yakin ingin menyelesaikan service ini?\nData akan ditandai selesai dan dicabut dari antrian.");
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::Spacing();
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_PRIMARY)));
+                    if (ImGui::Button("Ya, Selesaikan", ImVec2(150, 40)))
+                    {
+                        s->status = service::DONE;
+                        s->date_out = helper::getCurrentDate(); 
+
+                        if (m->front_queue == s) {
+                            m->front_queue = s->next_mech_q;
+                            if (m->front_queue == NULL) m->rear_queue = NULL;
+                        } else {
+                            service::Service *prevM = m->front_queue;
+                            while (prevM != NULL && prevM->next_mech_q != s) {
+                                prevM = prevM->next_mech_q;
+                            }
+                            if (prevM != NULL) {
+                                prevM->next_mech_q = s->next_mech_q; 
+                                if (s == m->rear_queue) m->rear_queue = prevM;
+                            }
+                        }
+                        s->next_mech_q = NULL;
+
+                        if (service::front_queue == s) {
+                            service::front_queue = s->next_q;
+                            if (service::front_queue == NULL) service::rear_queue = NULL;
+                        } else {
+                            service::Service *prevG = service::front_queue;
+                            while (prevG != NULL && prevG->next_q != s) {
+                                prevG = prevG->next_q;
+                            }
+                            if (prevG != NULL) {
+                                prevG->next_q = s->next_q; 
+                                if (s == service::rear_queue) service::rear_queue = prevG;
+                            }
+                        }
+                        s->next_q = NULL;
+
+                        service::total_queue--;
+                        service::update(s);
 
                         ShowToast("Sukses: Service berhasil diselesaikan!");
                         ImGui::CloseCurrentPopup();
@@ -992,6 +1389,7 @@ namespace AdminView
         EndCard();
     }
 
+
     void formNewCustomer()
     {
         BeginCard("FormNewCustomerCard", ImVec2(900, 600), false, false);
@@ -1013,7 +1411,6 @@ namespace AdminView
         ImGui::PopFont();
         ImGui::Spacing();
 
-      
         ImGui::BeginGroup(); // Kolom Kiri
         ImGui::PushFont(fontRegular);
         ImGui::Text("Nama Lengkap");
@@ -1033,7 +1430,7 @@ namespace AdminView
 
         ImGui::SameLine(450); // Jarak antar kolom
 
-        ImGui::BeginGroup(); 
+        ImGui::BeginGroup();
         ImGui::Text("Jenis Kelamin");
         ImGui::RadioButton("Laki-laki (L)", &new_genderCustomer, 0);
         ImGui::SameLine();
@@ -1063,7 +1460,6 @@ namespace AdminView
             {
                 ShowToast("Error: Nama pelanggan tidak boleh kosong!");
             }
-           
 
             else if (customer::findByName(finalCustName) != NULL)
             {
@@ -1085,11 +1481,9 @@ namespace AdminView
                 int totalCust = customer::count();
                 helper::generateID('C', totalCust, &newCust.id);
 
-                
                 customer::insert(newCust);
                 customer::save(newCust);
 
-                
                 new_namaCustomer[0] = '\0';
                 new_telpCustomer[0] = '\0';
                 new_alamatCustomer[0] = '\0';
@@ -1153,14 +1547,12 @@ namespace AdminView
                 mechanic::Mechanic *newMech = new mechanic::Mechanic;
                 newMech->name = finalMechName;
 
-               
                 newMech->front_queue = NULL;
                 newMech->rear_queue = NULL;
                 newMech->head_history = NULL;
                 newMech->prev = NULL;
                 newMech->next = NULL;
 
-                
                 int totalMech = mechanic::count();
                 helper::generateID('M', totalMech, &newMech->id);
 
@@ -1186,4 +1578,273 @@ namespace AdminView
 
         EndCard();
     }
+
+    void rescheduleService()
+    {
+        BeginCard("RescheduleServiceCard", ImVec2(1000, 600));
+
+        ImGui::PushFont(fontTitle);
+        ImGui::Text("Penjadwalan Ulang (Reschedule) Servis");
+        ImGui::PopFont();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        static int filter_montir_idx = 0;
+        static std::string selected_reschedule_id = "";
+        static std::string selected_reschedule_brand = "";
+        static std::string selected_old_date = "";
+        static int dp_day = 0, dp_month = 0, dp_year = 2026;
+
+        ImGui::PushFont(fontMedium);
+        ImGui::Text("Pilih Montir (Hanya yang memiliki antrean aktif):");
+        ImGui::PopFont();
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(250);
+
+      
+        const char *list_montir_names[100];
+        mechanic::Mechanic *filtered_mechanics[100]; // Array khusus untuk menyimpan montir yang lolos seleksi
+        int mechanic_count = 0;
+
+        
+        for (int i = 0; i < 100 && mechanic::list_mechanics[i] != nullptr; i++)
+        {
+            mechanic::Mechanic *m = mechanic::list_mechanics[i];
+            bool has_active_job = false;
+
+    
+            customer::Customer *c = customer::head;
+            while (c != NULL && !has_active_job)
+            {
+                service::Service *s = c->head_service;
+                while (s != NULL)
+                {
+                    if (s->mech_data->id == m->id && s->status == service::PROCESS)
+                    {
+                        has_active_job = true; // Ketemu! Montir ini punya kerjaan
+                        break;
+                    }
+                    s = s->next_cust;
+                }
+                c = c->next;
+            }
+
+            if (has_active_job)
+            {
+                list_montir_names[mechanic_count] = m->name.c_str();
+                filtered_mechanics[mechanic_count] = m; 
+                mechanic_count++;
+            }
+        }
+
+        if (filter_montir_idx >= mechanic_count)
+        {
+            filter_montir_idx = 0;
+        }
+
+        if (mechanic_count > 0)
+        {
+            ImGui::Combo("##filterMontir", &filter_montir_idx, list_montir_names, mechanic_count);
+        }
+        else
+        {
+            ImGui::TextColored(ImColor(255, 0, 0), "Saat ini tidak ada montir yang memiliki antrean servis.");
+        }
+
+        ImGui::Spacing();
+        ImGui::Spacing();
+
+    
+        mechanic::Mechanic *targetMontir = nullptr;
+        if (mechanic_count > 0 && filter_montir_idx >= 0 && filter_montir_idx < mechanic_count)
+        {
+            targetMontir = filtered_mechanics[filter_montir_idx]; 
+        }
+
+        bool found = false;
+        ImDrawList *draw_list = ImGui::GetWindowDrawList();
+
+        ImGui::BeginChild("ScrollAreaReschedule", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+        
+        if (targetMontir != nullptr)
+        {
+            customer::Customer *c = customer::head;
+            while (c != NULL)
+            {
+                service::Service *s = c->head_service;
+                while (s != NULL)
+                {
+                    
+                    if (s->mech_data->id == targetMontir->id && s->status == service::PROCESS)
+                    {
+                        found = true;
+
+                        ImVec2 pJob = ImGui::GetCursorScreenPos();
+                        ImGui::Dummy(ImVec2(900, 110));
+                        ImVec2 nextCardPos = ImGui::GetCursorScreenPos();
+
+                        draw_list->AddRectFilled(pJob, ImVec2(pJob.x + 900, pJob.y + 110), IM_COL32(248, 250, 252, 255), 10.0f);
+                        draw_list->AddRect(pJob, ImVec2(pJob.x + 900, pJob.y + 110), COLOR_BORDER, 10.0f);
+                        draw_list->AddRectFilled(pJob, ImVec2(pJob.x + 8, pJob.y + 110), COLOR_BADGE_ORG, 10.0f, ImDrawFlags_RoundCornersLeft);
+
+                        ImGui::SetCursorScreenPos(ImVec2(pJob.x + 30, pJob.y + 15));
+                        ImGui::PushFont(fontMedium);
+                        ImGui::Text("%s %s", s->brand.c_str(), s->model.c_str());
+                        ImGui::PopFont();
+
+                        ImGui::SetCursorScreenPos(ImVec2(pJob.x + 30, pJob.y + 45));
+                        ImGui::TextColored(ImColor(COLOR_TEXT_MUTED), "Prioritas: %d | Keluhan: %s", s->priority, s->issue.c_str());
+
+                        ImGui::SetCursorScreenPos(ImVec2(pJob.x + 30, pJob.y + 70));
+                        ImGui::TextColored(ImColor(200, 80, 0, 255), "Tgl Ambil Saat Ini: %s", s->date_out.c_str());
+
+                        ImGui::SetCursorScreenPos(ImVec2(pJob.x + 720, pJob.y + 35));
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_PRIMARY)));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(ImColor(COLOR_PRIMARY_DRK)));
+
+                        std::string btnID = "Ganti Tanggal##" + s->id;
+                        if (ImGui::Button(btnID.c_str(), ImVec2(150, 40)))
+                        {
+                            selected_reschedule_id = s->id;
+                            selected_reschedule_brand = s->brand + " " + s->model;
+                            selected_old_date = s->date_out;
+                            ImGui::OpenPopup("Popup Reschedule");
+                        }
+                        ImGui::PopStyleColor(2);
+
+                        ImGui::SetCursorScreenPos(nextCardPos);
+                        ImGui::Dummy(ImVec2(0, 5));
+                    }
+                    s = s->next_cust;
+                }
+                c = c->next;
+            }
+        }
+
+        if (targetMontir != nullptr && !found)
+        {
+            ImGui::Dummy(ImVec2(0, 20));
+            ImGui::TextColored(ImColor(COLOR_TEXT_MUTED), "Montir '%s' belum memiliki pekerjaan aktif.", targetMontir->name.c_str());
+        }
+
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+        if (ImGui::BeginPopupModal("Popup Reschedule", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::PushFont(fontMedium);
+            ImGui::TextColored(ImColor(COLOR_PRIMARY), "Ganti Tanggal Ambil");
+            ImGui::PopFont();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::Text("Kendaraan  : %s", selected_reschedule_brand.c_str());
+            ImGui::Text("Tgl Lama   : %s", selected_old_date.c_str());
+            ImGui::Spacing();
+            ImGui::Spacing();
+
+            int max_days = 31;
+            if (dp_month == 1)
+            {
+                bool isLeap = (dp_year % 4 == 0 && dp_year % 100 != 0) || (dp_year % 400 == 0);
+                max_days = isLeap ? 29 : 28;
+            }
+            else if (dp_month == 3 || dp_month == 5 || dp_month == 8 || dp_month == 10)
+            {
+                max_days = 30;
+            }
+
+            if (dp_day >= max_days)
+                dp_day = max_days - 1;
+
+            ImGui::BeginGroup();
+            ImGui::SetNextItemWidth(70);
+            std::string day_preview = std::to_string(dp_day + 1);
+            if (ImGui::BeginCombo("Hari", day_preview.c_str()))
+            {
+                for (int n = 0; n < max_days; n++)
+                {
+                    const bool is_selected = (dp_day == n);
+                    if (ImGui::Selectable(std::to_string(n + 1).c_str(), is_selected))
+                        dp_day = n;
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(100);
+            const char *bulan_items[] = {"Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"};
+            ImGui::Combo("Bulan", &dp_month, bulan_items, IM_ARRAYSIZE(bulan_items));
+
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(70);
+            ImGui::InputInt("Tahun", &dp_year, 0, 0);
+            if (dp_year < 2024)
+                dp_year = 2024;
+            ImGui::EndGroup();
+
+            ImGui::Spacing();
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_TEXT_GRN)));
+
+            if (ImGui::Button("Simpan Tanggal Baru", ImVec2(180, 40)))
+            {
+                char buffer[16];
+                snprintf(buffer, sizeof(buffer), "%02d-%02d-%02d", dp_day + 1, dp_month + 1, dp_year % 100);
+                std::string requested_date = buffer;
+                std::string final_date = service::findAvailableDateRecursive(requested_date, 1, selected_reschedule_id);
+
+                if (final_date == "FULL")
+                {
+                    ShowToast("Error: Tanggal diundur 5x dan tetap penuh. Masukkan tanggal lain!");
+                }
+                else
+                {
+                  
+                    service::Service *targetUpdate = service::find(selected_reschedule_id);
+                    if (targetUpdate != NULL)
+                    {
+                        targetUpdate->date_out = final_date;
+
+                        if (final_date == requested_date)
+                        {
+                            std::string msg = "Reschedule berhasil diubah ke " + final_date;
+                            ShowToast(msg.c_str());
+                        }
+                        else
+                        {
+                            std::string msg = "Tanggal bentrok! Otomatis diundur ke " + final_date;
+                            ShowToast(msg.c_str());
+                        }
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(ImColor(COLOR_BORDER)));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(COLOR_TEXT_MAIN)));
+            if (ImGui::Button("Batal", ImVec2(100, 40)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::PopStyleColor(2);
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::EndChild();
+        EndCard();
+    }
+
+
 }

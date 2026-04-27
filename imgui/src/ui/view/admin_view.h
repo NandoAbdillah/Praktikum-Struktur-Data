@@ -9,6 +9,7 @@ namespace AdminView
     void showServiceHistory();
     void showAllCustomers();
     void showCustomerData();
+    void rescheduleService();
     void finishService();
     void formNewMechanic();
     void formNewCustomer();
