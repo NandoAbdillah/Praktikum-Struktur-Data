@@ -27,6 +27,7 @@ namespace service
 
         std::string date_in;
         std::string date_out;
+        int priority;
 
         Status status;
 
@@ -41,6 +42,9 @@ namespace service
         Service *next_mech_q;
 
         Service *next_stack;
+
+        std::string cust_review;
+        int rating;
     };
 
     extern Service *head, *tail, *front_queue, *rear_queue;
@@ -71,6 +75,18 @@ namespace service
 
     bool cancelService(std::string id_servis, std::string id_customer);
     bool undoCancelService(std::string id_servis, std::string id_customer, std::string new_date);
+
+    std::string addOneDay(std::string date_str);
+    std::string findAvailableDateRecursive(std::string target_date, int attempt_count, std::string exclude_id = "");
+
+    // helper
+    long dateToInt(std::string d);
+    bool compareServices(service::Service *a, service::Service *b, int mode);
+    void insertionSort(service::Service *arr[], int n, int mode);
+    void swapService(service::Service **a, service::Service **b);
+    int partition(service::Service *arr[], int low, int high, int mode);
+    void quickSort(service::Service *arr[], int low, int high, int mode);
+
 }
 
 #endif // !SERVICE_H

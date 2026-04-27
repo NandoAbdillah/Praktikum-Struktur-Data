@@ -50,7 +50,7 @@ namespace service
         return total_queue >= MAX_SERVICES_QUEUE;
     }
 
-   
+    /*
     void enqueueService(Service *newService)
     {
         if (newService == NULL)
@@ -79,6 +79,55 @@ namespace service
             {
                 m->rear_queue->next_mech_q = newService;
                 m->rear_queue = newService;
+            }
+        }
+    }
+*/
+
+    void enqueueService(Service *newService)
+    {
+        if (newService == NULL)
+            return;
+
+        // ---------------------------------------------------------
+        // 1. SAFETY NET: Paksa putus tali bawaan! (Sangat Penting)
+        // ---------------------------------------------------------
+        newService->next_q = NULL;
+        newService->next_mech_q = NULL;
+
+        // 2. Masukkan ke Antrean Global
+        if (front_queue == NULL)
+        {
+            front_queue = rear_queue = newService;
+            total_queue++;
+        }
+        else
+        {
+            // PENCEGAHAN TALI MELINGKAR: Jangan sambung kalau pointernya sama persis!
+            if (rear_queue != newService)
+            {
+                rear_queue->next_q = newService;
+                rear_queue = newService;
+                total_queue++;
+            }
+        }
+
+        // 3. Masukkan ke Antrean Montir
+        if (newService->mech_data != NULL)
+        {
+            mechanic::Mechanic *m = newService->mech_data;
+            if (m->front_queue == NULL)
+            {
+                m->front_queue = m->rear_queue = newService;
+            }
+            else
+            {
+                // PENCEGAHAN TALI MELINGKAR: Jangan sambung kalau pointernya sama persis!
+                if (m->rear_queue != newService)
+                {
+                    m->rear_queue->next_mech_q = newService;
+                    m->rear_queue = newService;
+                }
             }
         }
     }
@@ -111,16 +160,16 @@ namespace service
         total_cancel_stack++;
     }
 
-    // pop 
+    // pop
     Service *popCancel()
     {
         if (top_cancel_stack == NULL)
-            return NULL; 
+            return NULL;
 
-        Service *s = top_cancel_stack;                   
-        top_cancel_stack = top_cancel_stack->next_stack; 
+        Service *s = top_cancel_stack;
+        top_cancel_stack = top_cancel_stack->next_stack;
 
-        s->next_stack = NULL; 
+        s->next_stack = NULL;
         total_cancel_stack--;
 
         return s;
@@ -130,11 +179,10 @@ namespace service
     {
         Service *s = find(id_servis);
         if (s == NULL || s->id_cust != id_customer)
-            return false; 
+            return false;
         if (s->status != PROCESS)
-            return false; 
+            return false;
 
- 
         // CABUT DARI QUEUE GLOBAL
         if (front_queue == s)
         {
@@ -158,10 +206,9 @@ namespace service
                     rear_queue = prev;
             }
         }
-        s->next_q = NULL; 
+        s->next_q = NULL;
         total_queue--;
 
-        
         // CABUT DARI QUEUE MONTIR
         if (s->mech_data != NULL)
         {
@@ -188,10 +235,9 @@ namespace service
                         m->rear_queue = prev_m;
                 }
             }
-            s->next_mech_q = NULL; 
+            s->next_mech_q = NULL;
         }
 
-       
         pushCancel(s);
 
         // Fungis belum diterapkan off
@@ -202,16 +248,16 @@ namespace service
 
     bool undoCancelService(std::string id_servis, std::string id_customer, std::string new_date)
     {
-        Service *tempStack = NULL; 
-        Service *target = NULL;    
+        Service *tempStack = NULL;
+        Service *target = NULL;
 
         while (top_cancel_stack != NULL)
         {
-            Service *current = popCancel(); 
-            
+            Service *current = popCancel();
+
             if (current->id == id_servis && current->id_cust == id_customer)
             {
-                target = current; 
+                target = current;
                 break;
             }
             else
@@ -225,31 +271,30 @@ namespace service
         {
             Service *current = tempStack;
             tempStack = tempStack->next_stack;
-            
-            pushCancel(current); 
+
+            pushCancel(current);
         }
 
-        // Kalau ketemu 
+        // Kalau ketemu
         if (target != NULL)
         {
-            target->status = PROCESS; 
-            
-            if (new_date != "-" && new_date != "") 
+            target->status = PROCESS;
+
+            if (new_date != "-" && new_date != "")
             {
                 target->date_in = new_date;
             }
 
-
-            target->next_stack = NULL; 
+            target->next_stack = NULL;
 
             enqueueService(target);
-            
-            save(target); 
-            
+
+            save(target);
+
             return true;
         }
 
-        return false; 
+        return false;
     }
 
     //  Tambah Service
@@ -522,6 +567,10 @@ namespace service
             s->date_out = helper::getCSVColumn(line, 7);
             string statusStr = helper::getCSVColumn(line, 8);
             s->status = statusStr == "0" ? PROCESS : DONE;
+            s->priority = stoi(helper::getCSVColumn(line, 9));
+            s->cust_review = helper::getCSVColumn(line, 10);
+            string ratingStr = helper::getCSVColumn(line, 11);
+            s->rating = ratingStr.empty() ? 0 : stoi(ratingStr);
 
             s->cust_data = NULL;
             s->next = NULL;
@@ -539,14 +588,12 @@ namespace service
         return true;
     }
 
-   
-
     bool loadQueue()
     {
-        Service *bantu = head; 
+        Service *bantu = head;
         while (bantu != NULL)
         {
-           
+
             if (bantu->status == PROCESS)
             {
                 enqueueService(bantu);
@@ -597,7 +644,11 @@ namespace service
                         << service->issue << ","
                         << service->date_in << ","
                         << (service->date_out.empty() ? "-" : service->date_out) << ","
-                        << (service->status == PROCESS ? "0" : "1") << "\n";
+                        << (service->status == PROCESS ? "0" : "1") << ","
+                        << (service->priority ? to_string(service->priority) : "") << ","
+                        << (service->cust_review.empty() ? "" : service->cust_review) << ","
+                        << (service->rating ? to_string(service->rating) : "")
+                        << "\n";
             }
             else
             {
@@ -760,9 +811,168 @@ namespace service
              << newService->issue << ","
              << newService->date_in << ","
              << (newService->date_out.empty() ? "-" : newService->date_out) << ","
-             << (newService->status == PROCESS ? "0" : "1");
+             << (newService->status == PROCESS ? "0" : "1") << ","
+             << (newService->priority ? to_string(newService->priority) : "")<< ","
+             << (newService->cust_review.empty() ? "" : newService->cust_review) << ","
+             << (newService->rating ? to_string(newService->rating) : "");
 
         file.close();
         return true;
+    }
+
+    string addOneDay(string date_str)
+    {
+        int d, m, y;
+
+        sscanf(date_str.c_str(), "%d-%d-%d", &d, &m, &y);
+        int full_year = 2000 + y;
+
+        int max_days = 31;
+        if (m == 2)
+        {
+            bool isLeap = (full_year % 4 == 0 && full_year % 100 != 0) || (full_year % 400 == 0);
+            max_days = isLeap ? 29 : 28;
+        }
+        else if (m == 4 || m == 6 || m == 9 || m == 11)
+        {
+            max_days = 30;
+        }
+
+        d++;
+
+        
+        if (d > max_days)
+        {
+            d = 1;
+            m++;
+           
+            if (m > 12)
+            {
+                m = 1;
+                y++;
+            }
+        }
+
+    
+        char buffer[16];
+        snprintf(buffer, sizeof(buffer), "%02d-%02d-%02d", d, m, y % 100);
+        return string(buffer);
+    }
+
+    string findAvailableDateRecursive(string target_date, int attempt_count, string exclude_id)
+    {
+
+        if (attempt_count > 5)
+        {
+            return "FULL";
+        }
+
+        bool isTaken = false;
+        Service *cek = head;
+        
+        while (cek != NULL)
+        {
+            if (cek->status == PROCESS && cek->date_out == target_date && cek->id != exclude_id)
+            {
+                isTaken = true;
+                break;
+            }
+            cek = cek->next;
+        }
+
+        // BASE CASE 
+        if (!isTaken)
+        {
+            return target_date;
+        }
+
+    
+        string next_date = addOneDay(target_date);
+
+        cout << "Tanggal " << target_date << " penuh." << endl;
+        cout << "Tanggal diundur " << attempt_count << " hari setelah tanggal baru..." << endl;
+
+        return findAvailableDateRecursive(next_date, attempt_count + 1, exclude_id);
+    }
+
+    long dateToInt(std::string d)
+    {
+        if (d.empty())
+            return 99999999; 
+        int day = 0, month = 0, year = 0;
+        sscanf(d.c_str(), "%d-%d-%d", &day, &month, &year);
+        return year * 10000 + month * 100 + day;
+    }
+
+    bool compareServices(service::Service *a, service::Service *b, int mode)
+    {
+        if (mode == 1)
+        {
+    
+            return dateToInt(a->date_out) < dateToInt(b->date_out);
+        }
+        else if (mode == 2)
+        {
+            // Urutkan Prioritas (Besar ke Kecil)
+            if (a->priority != b->priority)
+            {
+                return a->priority > b->priority; 
+            }
+            else
+            {
+                return dateToInt(a->date_out) < dateToInt(b->date_out);
+            }
+        }
+        return false;
+    }
+
+    // 3. Algoritma Insertion Sort (Untuk data < 15)
+    void insertionSort(service::Service *arr[], int n, int mode)
+    {
+        for (int i = 1; i < n; i++)
+        {
+            service::Service *key = arr[i];
+            int j = i - 1;
+            while (j >= 0 && compareServices(key, arr[j], mode))
+            {
+                arr[j + 1] = arr[j];
+                j = j - 1;
+            }
+            arr[j + 1] = key;
+        }
+    }
+
+    // 4. Algoritma Quick Sort (Untuk data >= 15)
+    void swapService(service::Service **a, service::Service **b)
+    {
+        service::Service *t = *a;
+        *a = *b;
+        *b = t;
+    }
+
+    int partition(service::Service *arr[], int low, int high, int mode)
+    {
+        service::Service *pivot = arr[high];
+        int i = (low - 1);
+        for (int j = low; j <= high - 1; j++)
+        {
+            if (compareServices(arr[j], pivot, mode))
+            {
+                i++;
+                swapService(&arr[i], &arr[j]);
+            }
+        }
+        swapService(&arr[i + 1], &arr[high]);
+        return (i + 1);
+    }
+
+    void quickSort(service::Service *arr[], int low, int high, int mode)
+    {
+        if (low < high)
+        {
+            int pi = partition(arr, low, high, mode);
+            quickSort(arr, low, pi - 1, mode);
+            quickSort(arr, pi + 1, high, mode);
+        }
     }
 }
